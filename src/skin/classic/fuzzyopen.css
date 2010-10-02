@@ -1,0 +1,83 @@
+@import url('chrome://global/skin/');
+
+@namespace url('http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul');
+@namespace html url('http://www.w3.org/1999/xhtml');
+
+#fuzzyopen-query {
+	-moz-appearance:        none;
+  background:             Window;
+  color:                  WindowText;
+  margin:                 0;
+	border:                 none;
+  border-top:             1px solid;
+	-moz-border-top-colors: ThreeDDarkShadow;
+  -moz-box-flex:          1;
+}
+
+#fuzzyopen-query[empty="true"] {
+  color: ThreeDShadow;
+}
+
+#fuzzyopen-results {
+  -moz-appearance: none;
+  background:      Window;
+  overflow:        auto;
+  height:          200px;
+}
+
+#fuzzyopen-results html|ol {
+  list-style:    none;
+  margin:        0;
+  padding:       0;
+  -moz-box-flex: 1;
+}
+
+#fuzzyopen-results html|li {
+  padding:       5px;
+  border-bottom: 1px solid ThreeDLightShadow;
+  overflow-x:    hidden;
+  overflow-y:    auto;
+  cursor:        pointer;
+}
+
+#fuzzyopen-results html|div.extension {
+  float:      left;
+  width:      64px;
+  min-height: 32px;
+  font-size:  150%;
+}
+
+#fuzzyopen-results html|div.file {
+  float:           left;
+  width:           100%;
+  margin-left:     -64px;
+  padding-left:    74px;
+  -moz-box-sizing: border-box;
+}
+
+#fuzzyopen-results html|div.extension html|strong {
+  background:         rgba(0, 0, 0, 0.25);
+  color:              rgba(0, 0, 0, 0.5);
+  text-transform:     uppercase;
+  letter-spacing:     -1px;
+  display:            inline-block;
+  padding:            5px 10px;
+  -moz-border-radius: 2px;
+}
+
+#fuzzyopen-results html|div.path {
+  font-size:   90%;
+  line-height: 110%;
+  font-family: Monaco, Consolas, 'Lucida Console', 'Bitstream Vera Sans Mono', 'DejaVu Sans Mono', 'Courier New', Courier, monospace;
+  color:       rgba(0, 0, 0, 0.5);
+  padding-top: 5px;
+}
+
+#fuzzyopen-results html|div.path html|span.separator {
+  display: inline;
+  padding: 0 5px;
+}
+
+#fuzzyopen-results html|li:hover {
+  background-color: Menu;
+}

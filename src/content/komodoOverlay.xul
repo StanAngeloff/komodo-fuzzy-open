@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE overlay SYSTEM "chrome://fuzzyopen/locale/fuzzyopen.dtd">
+<?xml-stylesheet href="chrome://fuzzyopen/skin/fuzzyopen.css" type="text/css" ?>
+<overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:html="http://www.w3.org/1999/xhtml"
+         id="fuzzyopen">
+
+    <stringbundleset>
+        <stringbundle id="strings" src="chrome://fuzzyopen/locale/fuzzyopen.properties" />
+    </stringbundleset>
+
+    <script type="application/x-javascript" src="chrome://fuzzyopen/content/scripts/fuzzyopen.js" />
+    <script type="application/x-javascript" src="chrome://fuzzyopen/content/scripts/ui.js" />
+
+	<broadcasterset id="broadcasterset_global">
+		<broadcaster id="cmd_fuzzyopen_togglePane"
+					 key="key_cmd_fuzzyopen_togglePane"
+					 desc="&command.togglePane;"
+					 oncommand="extensions.fuzzyopen.togglePane(event)" />
+	</broadcasterset>
+
+    <vbox id="placesViewbox_places">
+        <hbox id="fuzzyopen-header" insertbefore="places-files-tree">
+            <textbox id="fuzzyopen-query" type="search" timeout="250" emptytext="&empty;" />
+        </hbox>
+        <scrollbox id="fuzzyopen-results" collapsed="true" insertafter="places-files-tree">
+            <!-- Template:
+            <html:ol id="fuzzyopen-list">
+                <html:li>
+                    <html:div class="extension"><html:strong>php</html:strong></html:div>
+                    <html:div class="file">
+                        <html:div class="name"><html:span class="icon" />header_php.php</html:div>
+                        <html:div class="path"><html:span class="directory">includes</html:span><html:span class="separator">→<html:wbr /></html:span><html:span class="directory">modules</html:span><html:span class="separator">→<html:wbr /></html:span><html:span class="directory">pages</html:span><html:span class="separator">→<html:wbr /></html:span><html:span class="directory">checkout_login</html:span></html:div>
+                    </html:div>
+                </html:li>
+            </html:ol>
+            -->
+        </scrollbox>
+    </vbox>
+
+</overlay>
