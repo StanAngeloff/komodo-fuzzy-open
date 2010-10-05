@@ -1,13 +1,13 @@
 var __extends = function(child, parent) {
-    var ctor = function(){};
-    ctor.prototype = parent.prototype;
-    child.prototype = new ctor();
-    child.prototype.constructor = child;
-    if (typeof parent.extended === "function") parent.extended(child);
-    child.__super__ = parent.prototype;
-  }, __bind = function(func, context) {
-    return function(){ return func.apply(context, arguments); };
-  };
+  var ctor = function() {};
+  ctor.prototype = parent.prototype;
+  child.prototype = new ctor();
+  child.prototype.constructor = child;
+  if (typeof parent.extended === "function") parent.extended(child);
+  child.__super__ = parent.prototype;
+}, __bind = function(func, context) {
+  return function() { return func.apply(context, arguments); };
+};
 if (!(typeof extensions !== "undefined" && extensions !== null)) {
   window.extensions = {};
 }
@@ -20,21 +20,25 @@ if (!(typeof extensions !== "undefined" && extensions !== null)) {
   Components.utils.import('resource://fuzzyopen/filesystem.js',  modules);
   Components.utils.import('resource://fuzzyopen/fuzzymatch.js',  modules);
   Components.utils.import('resource://fuzzyopen/threading.js',   modules);
-  DirectoryJob = function(_arg, id) {
-    this.path = _arg;
-    DirectoryJob.__super__.constructor.call(this, id);
-    return this;
-  };
+  DirectoryJob = (function() {
+    return function DirectoryJob(_arg, id) {
+      this.path = _arg;
+      DirectoryJob.__super__.constructor.call(this, id);
+      return this;
+    };
+  })();
   __extends(DirectoryJob, modules.AbstractJob);
   DirectoryJob.prototype.execute = function() {
     return (new modules.Directory(this.path)).files;
   };
-  FuzzyMatchJob = function(_arg, _arg2, id) {
-    this.query = _arg2;
-    this.files = _arg;
-    FuzzyMatchJob.__super__.constructor.call(this, id);
-    return this;
-  };
+  FuzzyMatchJob = (function() {
+    return function FuzzyMatchJob(_arg, _arg2, id) {
+      this.query = _arg2;
+      this.files = _arg;
+      FuzzyMatchJob.__super__.constructor.call(this, id);
+      return this;
+    };
+  })();
   __extends(FuzzyMatchJob, modules.AbstractJob);
   FuzzyMatchJob.prototype.execute = function() {
     return (new modules.FuzzyMatch(this.files)).find(this.query);
@@ -51,20 +55,20 @@ if (!(typeof extensions !== "undefined" && extensions !== null)) {
     osPathService = Cc['@activestate.com/koOsPath;1'].getService(Ci.koIOsPath);
     path = osPathService.join(file.path, '');
     if (this.cachedPath === path) {
-      return null;
+      return;
     }
     if (this.isWorking) {
       this.directoryJob.shutdown();
     }
     this.directoryJob = new DirectoryJob(this.cachedPath = path);
-    this.directoryJob.on('complete', (__bind(function(files) {
+    this.directoryJob.on('complete', __bind(function(files) {
       this.isWorking = false;
       return (this.cachedFiles = files);
-    }, this)));
-    this.directoryJob.on('failure', (__bind(function(error) {
+    }, this));
+    this.directoryJob.on('failure', __bind(function(error) {
       this.isWorking = false;
       return this.catchError(error);
-    }, this)));
+    }, this));
     this.directoryJob.spawn();
     return (this.isWorking = true);
   };
@@ -84,24 +88,24 @@ if (!(typeof extensions !== "undefined" && extensions !== null)) {
   };
   this.togglePane = function(event) {
     ko.commands.doCommandAsync('cmd_viewLeftPane', event);
-    return setTimeout((__bind(function() {
+    return setTimeout(__bind(function() {
       var box, element, query, results;
       element = document.getElementById('cmd_viewLeftPane');
       if (!(element)) {
-        return null;
+        return;
       }
       box = document.getElementById(element.getAttribute('box'));
       if (!(box)) {
-        return null;
+        return;
       }
       if (box.getAttribute('collapsed') !== 'false') {
-        return null;
+        return;
       }
       query = document.getElementById('fuzzyopen-query');
       results = document.getElementById('fuzzyopen-results');
       this.ui.start(query, results);
       return query.getAttribute('disabled') !== 'true' ? query.focus() : undefined;
-    }, this)), 125);
+    }, this), 125);
   };
   return this;
 }).call(extensions.fuzzyopen || (extensions.fuzzyopen = {}));
@@ -111,7 +115,7 @@ window.addEventListener('load', function() {
   return (interval = setInterval(function() {
     var _ref, _ref2, query, results;
     if (!((((_ref = ko.places) != null) ? (((_ref2 = _ref.manager) != null) ? _ref2.currentPlace : undefined) : undefined))) {
-      return null;
+      return;
     }
     clearInterval(interval);
     query = document.getElementById('fuzzyopen-query');

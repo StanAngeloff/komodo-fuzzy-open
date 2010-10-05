@@ -6,14 +6,16 @@ JOB_NEXT_ID = 0;
 JOB_EVENTS = {};
 JOB_THREADS = {};
 JOB_STATUS = {};
-AbstractJob = function(_arg) {
-  this.id = _arg;
-  this.id || (this.id = JOB_NEXT_ID++);
-  JOB_EVENTS[this.id] = {};
-  JOB_STATUS[this.id] = AbstractJob.CREATED;
-  JOB_THREADS[this.id] = null;
-  return this;
-};
+AbstractJob = (function() {
+  return function AbstractJob(_arg) {
+    this.id = _arg;
+    this.id || (this.id = JOB_NEXT_ID++);
+    JOB_EVENTS[this.id] = {};
+    JOB_STATUS[this.id] = AbstractJob.CREATED;
+    JOB_THREADS[this.id] = null;
+    return this;
+  };
+})();
 AbstractJob.CREATED = 'created';
 AbstractJob.RUNNING = 'running';
 AbstractJob.SHUTDOWN = 'shutdown';
@@ -28,8 +30,7 @@ AbstractJob.prototype.on = function(name, callback) {
 AbstractJob.prototype.remove = function(name, callback) {
   var _ref, i;
   if (name in JOB_EVENTS[this.id]) {
-    _ref = JOB_EVENTS[this.id][name].length;
-    for (i = 0; (0 <= _ref ? i < _ref : i > _ref); (0 <= _ref ? i += 1 : i -= 1)) {
+    for (i = 0, _ref = JOB_EVENTS[this.id][name].length; (0 <= _ref ? i < _ref : i > _ref); (0 <= _ref ? i += 1 : i -= 1)) {
       if (JOB_EVENTS[this.id][name][i] === callback) {
         return JOB_EVENTS[this.id][name].splice(i, 1);
       }
@@ -70,12 +71,14 @@ AbstractJob.prototype.QueryInterface = function(iid) {
   }
   return this;
 };
-JobCompleted = function(_arg, _arg2, _arg3) {
-  this.result = _arg3;
-  this.eventName = _arg2;
-  this.id = _arg;
-  return this;
-};
+JobCompleted = (function() {
+  return function JobCompleted(_arg, _arg2, _arg3) {
+    this.result = _arg3;
+    this.eventName = _arg2;
+    this.id = _arg;
+    return this;
+  };
+})();
 JobCompleted.prototype.run = function() {
   var _i, _len, _ref, _result, callback;
   if (JOB_STATUS[this.id] === AbstractJob.SHUTDOWN) {
@@ -86,8 +89,8 @@ JobCompleted.prototype.run = function() {
   }
   try {
     if (this.eventName in JOB_EVENTS[this.id]) {
-      _result = []; _ref = JOB_EVENTS[this.id][this.eventName];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      _result = [];
+      for (_i = 0, _len = (_ref = JOB_EVENTS[this.id][this.eventName]).length; _i < _len; _i++) {
         callback = _ref[_i];
         _result.push(callback.call(this, this.result));
       }

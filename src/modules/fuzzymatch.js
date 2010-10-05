@@ -9,8 +9,7 @@ naturalCompare = function(prev, next) {
   var _ref, i;
   prev = chunkify(('' + prev).toLowerCase());
   next = chunkify(('' + next).toLowerCase());
-  _ref = Math.max(prev.length, next.length);
-  for (i = 0; (0 <= _ref ? i < _ref : i > _ref); (0 <= _ref ? i += 1 : i -= 1)) {
+  for (i = 0, _ref = Math.max(prev.length, next.length); (0 <= _ref ? i < _ref : i > _ref); (0 <= _ref ? i += 1 : i -= 1)) {
     if (i >= prev.length) {
       return -1;
     }
@@ -26,18 +25,20 @@ naturalCompare = function(prev, next) {
   }
   return 0;
 };
-FuzzyMatch = function(_arg) {
-  this.files = _arg;
-  this.files || (this.files = []);
-  return this;
-};
+FuzzyMatch = (function() {
+  return function FuzzyMatch(_arg) {
+    this.files = _arg;
+    this.files || (this.files = []);
+    return this;
+  };
+})();
 FuzzyMatch.threshold = 16;
 FuzzyMatch.prototype.find = function(query) {
   var _i, _len, _ref, _result, file, match, result, score;
   query = this.normalize(query);
   result = (function() {
-    _result = []; _ref = this.files;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+    _result = [];
+    for (_i = 0, _len = (_ref = this.files).length; _i < _len; _i++) {
       file = _ref[_i];
       if (score = this.match(query, this.normalize(file))) {
         _result.push({

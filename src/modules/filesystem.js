@@ -2,19 +2,21 @@ var Directory, EXPORTED_SYMBOLS;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
-Directory = function(_arg, _arg2) {
-  this.parent = _arg2;
-  this.path = _arg;
-  if (this.parent) {
-    this.base = this.parent.base;
-    this.files = this.parent.files;
-  } else {
-    this.base = this.path;
-    this.files = [];
-  }
-  this.scan();
-  return this;
-};
+Directory = (function() {
+  return function Directory(_arg, _arg2) {
+    this.parent = _arg2;
+    this.path = _arg;
+    if (this.parent) {
+      this.base = this.parent.base;
+      this.files = this.parent.files;
+    } else {
+      this.base = this.path;
+      this.files = [];
+    }
+    this.scan();
+    return this;
+  };
+})();
 Directory.prototype.scan = function() {
   var current, directory, iterator, unwrap;
   try {
