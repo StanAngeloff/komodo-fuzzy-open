@@ -23,6 +23,7 @@ strings = Cc['@mozilla.org/intl/stringbundle;1'].getService(Ci.nsIStringBundleSe
 this.extensions.fuzzyopen.ui = class UI
 
   @top:     null
+  @history: []
   @maximum: 100
 
   constructor: (queryId, resultsId, workingId, hideList) ->
@@ -69,10 +70,15 @@ this.extensions.fuzzyopen.ui = class UI
         selected = list.querySelector '.selected'
         return unless selected
         ko.open.URI selected.getAttribute 'data-uri'
+        @pushHistory()
         UI.toggleLeftPane() if this is UI.top
       else if key is KeyEvent.DOM_VK_UP
         $stop event
-        move 'up'
+        if @queryElement.value.length < 1 and UI.history.length
+          @queryElement.value = UI.history[UI.history.length - 1]
+          @open @queryElement.value
+        else
+          move 'up'
       else if key is KeyEvent.DOM_VK_DOWN
         $stop event
         move 'down'
@@ -164,6 +170,11 @@ this.extensions.fuzzyopen.ui = class UI
           break
         parent = parent.parentNode
     @resultsElement.appendChild list
+
+  pushHistory: ->
+    value = @queryElement.value.trim()
+    UI.history.splice i, 1 for stored, i in UI.history when stored is value
+    UI.history.push value
 
   @toggleLeftPane: (event) ->
     ko.commands.doCommandAsync command = 'cmd_viewLeftPane', event

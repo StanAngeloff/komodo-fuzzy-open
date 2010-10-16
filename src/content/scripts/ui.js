@@ -75,6 +75,7 @@
       return UI;
     })();
     UI.top = null;
+    UI.history = [];
     UI.maximum = 100;
     UI.prototype.addEvents = function() {
       var getList, move;
@@ -128,10 +129,16 @@
             return;
           }
           ko.open.URI(selected.getAttribute('data-uri'));
+          this.pushHistory();
           return this === UI.top ? UI.toggleLeftPane() : undefined;
         } else if (key === KeyEvent.DOM_VK_UP) {
           $stop(event);
-          return move('up');
+          if (this.queryElement.value.length < 1 && UI.history.length) {
+            this.queryElement.value = UI.history[UI.history.length - 1];
+            return this.open(this.queryElement.value);
+          } else {
+            return move('up');
+          }
         } else if (key === KeyEvent.DOM_VK_DOWN) {
           $stop(event);
           return move('down');
@@ -258,6 +265,17 @@
         return _result2;
       }, this));
       return this.resultsElement.appendChild(list);
+    };
+    UI.prototype.pushHistory = function() {
+      var _len, _ref, i, stored, value;
+      value = this.queryElement.value.trim();
+      for (i = 0, _len = (_ref = UI.history).length; i < _len; i++) {
+        stored = _ref[i];
+        if (stored === value) {
+          UI.history.splice(i, 1);
+        }
+      }
+      return UI.history.push(value);
     };
     UI.toggleLeftPane = function(event) {
       var command;
