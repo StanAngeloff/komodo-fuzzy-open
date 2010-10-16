@@ -7,12 +7,15 @@ this.extensions.fuzzyopen = {} unless extensions.fuzzyopen?
 `const HTML_NS = 'http://www.w3.org/1999/xhtml'`
 
 $element = (id) -> document.getElementById id
-$on      = (element, event, block) -> element.addEventListener event, block, false
+$on      = (element, event, block) -> element.addEventListener event, block, if event.indexOf('key') is 0 then true else false
 $sleep   = (interval, resume) -> setTimeout resume, interval
 $new     = (tagName, attrs) ->
   element = document.createElementNS(HTML_NS, tagName)
   (element[key] = value) for key, value of attrs if attrs
   element
+$stop    = (event) ->
+  event.stopPropagation()
+  event.preventDefault()
 
 strings = Cc['@mozilla.org/intl/stringbundle;1'].getService(Ci.nsIStringBundleService).createBundle 'chrome://fuzzyopen/locale/fuzzyopen.properties'
 
@@ -34,17 +37,52 @@ this.extensions.fuzzyopen.ui = class UI
     @addEvents()
 
   addEvents: ->
+
     $on @queryElement, 'command', =>
       value = @queryElement.value.trim()
       if value.length
         @open value
       else
         @hide()
+
+    getList = => if (list = @resultsElement.childNodes[0])?.id is 'fuzzyopen-list' then list else null
+    move    = (direction) =>
+      return unless list = getList()
+      prev = list.querySelector '.selected'
+      next = (if direction is 'up' then prev.previousSibling else prev.nextSibling) if prev
+      next = (if direction is 'up' then list.childNodes[list.childNodes.length - 1] else list.childNodes[0]) if not next
+      return if next is prev
+      prev.className  = '' if prev
+      next.className  = 'selected'
+      visibleTop      = @resultsElement.scrollTop
+      nextTop         = next.offsetTop - list.offsetTop
+      visibleBottom   = visibleTop + @resultsElement.boxObject.height
+      nextBottom      = nextTop + next.offsetHeight
+      @resultsElement.scrollTop  = nextTop                    if nextTop < visibleTop
+      @resultsElement.scrollTop += nextBottom - visibleBottom if nextBottom > visibleBottom
+
+    $on @queryElement, 'keypress', (event) =>
+      key = event.keyCode
+      if key in [KeyEvent.DOM_VK_ENTER, KeyEvent.DOM_VK_RETURN]
+        $stop event
+        return unless list = getList()
+        selected = list.querySelector '.selected'
+        return unless selected
+        ko.open.URI selected.getAttribute 'data-uri'
+        UI.toggleLeftPane() if this is UI.top
+      else if key is KeyEvent.DOM_VK_UP
+        $stop event
+        move 'up'
+      else if key is KeyEvent.DOM_VK_DOWN
+        $stop event
+        move 'down'
+
     $on @fuzzyOpen, 'loading', =>
       @empty()
       loading = $new 'div', className: 'loading'
       loading.innerHTML = "<p><span>#{ strings.GetStringFromName 'loading' }</span></p>"
       @resultsElement.appendChild loading
+
     $on @fuzzyOpen, 'working', =>
       @isWorking yes
       @empty()
@@ -101,9 +139,10 @@ this.extensions.fuzzyopen.ui = class UI
     html   = ''
     for file, i in files
       extension = if file.indexOf('.') < 0 then '' else file.split('.').pop()
-      extension = extension.substring(0, 7) + '…' if extension.length > 7
+      extension = "#{ extension.substring(0, 7) }…" if extension.length > 7
       dirName   = file.split '/'
       baseName  = dirName.pop()
+      baseName  = "#{ baseName.substring(0, 32) }…" if baseName.length > 32
       html += """
       <li#{ if i is 0 then ' class="selected"' else '' } data-uri="#{ escape "#{@path}/#{file}" }">
         <div class="extension"><strong>#{ escape extension }</strong></div>

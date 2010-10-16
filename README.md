@@ -18,6 +18,7 @@ What is working?
 * Semi-large projects are supported (up to 10, 000 files)
 * New command `User Interface: Show/Hide Left Pane & Focus Search`
 * Displaying results from fuzzy search under Places
+* Keyboard navigation using Up/Down arrows and Enter
 
 What is not implemented?
 ========================
@@ -25,4 +26,3 @@ What is not implemented?
 * Unix support
   - should be easy enough if `ls` behaves consistently across distros
   - Fast Open is another good place to look at for multi-platform directory traversal
-* Keyboard or mouse navigation in results

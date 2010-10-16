@@ -1,5 +1,5 @@
 (function() {
-  var $element, $new, $on, $sleep, UI, strings;
+  var $element, $new, $on, $sleep, $stop, UI, strings;
   var __hasProp = Object.prototype.hasOwnProperty, __bind = function(func, context) {
     return function() { return func.apply(context, arguments); };
   };
@@ -16,7 +16,7 @@
     return document.getElementById(id);
   };
   $on = function(element, event, block) {
-    return element.addEventListener(event, block, false);
+    return element.addEventListener(event, block, event.indexOf('key') === 0 ? true : false);
   };
   $sleep = function(interval, resume) {
     return setTimeout(resume, interval);
@@ -32,6 +32,10 @@
       }
     }
     return element;
+  };
+  $stop = function(event) {
+    event.stopPropagation();
+    return event.preventDefault();
   };
   strings = Cc['@mozilla.org/intl/stringbundle;1'].getService(Ci.nsIStringBundleService).createBundle('chrome://fuzzyopen/locale/fuzzyopen.properties');
   this.extensions.fuzzyopen.ui = (function() {
@@ -73,10 +77,65 @@
     UI.top = null;
     UI.maximum = 100;
     UI.prototype.addEvents = function() {
+      var getList, move;
       $on(this.queryElement, 'command', __bind(function() {
         var value;
         value = this.queryElement.value.trim();
         return value.length ? this.open(value) : this.hide();
+      }, this));
+      getList = __bind(function() {
+        var _ref, list;
+        return (((_ref = (list = this.resultsElement.childNodes[0])) != null) ? _ref.id : undefined) === 'fuzzyopen-list' ? list : null;
+      }, this);
+      move = __bind(function(direction) {
+        var list, next, nextBottom, nextTop, prev, visibleBottom, visibleTop;
+        if (!(list = getList())) {
+          return;
+        }
+        prev = list.querySelector('.selected');
+        if (prev) {
+          next = (direction === 'up' ? prev.previousSibling : prev.nextSibling);
+        }
+        if (!next) {
+          next = (direction === 'up' ? list.childNodes[list.childNodes.length - 1] : list.childNodes[0]);
+        }
+        if (next === prev) {
+          return;
+        }
+        if (prev) {
+          prev.className = '';
+        }
+        next.className = 'selected';
+        visibleTop = this.resultsElement.scrollTop;
+        nextTop = next.offsetTop - list.offsetTop;
+        visibleBottom = visibleTop + this.resultsElement.boxObject.height;
+        nextBottom = nextTop + next.offsetHeight;
+        if (nextTop < visibleTop) {
+          this.resultsElement.scrollTop = nextTop;
+        }
+        return nextBottom > visibleBottom ? this.resultsElement.scrollTop += nextBottom - visibleBottom : undefined;
+      }, this);
+      $on(this.queryElement, 'keypress', __bind(function(event) {
+        var key, list, selected;
+        key = event.keyCode;
+        if ((key === KeyEvent.DOM_VK_ENTER || key === KeyEvent.DOM_VK_RETURN)) {
+          $stop(event);
+          if (!(list = getList())) {
+            return;
+          }
+          selected = list.querySelector('.selected');
+          if (!selected) {
+            return;
+          }
+          ko.open.URI(selected.getAttribute('data-uri'));
+          return this === UI.top ? UI.toggleLeftPane() : undefined;
+        } else if (key === KeyEvent.DOM_VK_UP) {
+          $stop(event);
+          return move('up');
+        } else if (key === KeyEvent.DOM_VK_DOWN) {
+          $stop(event);
+          return move('down');
+        }
       }, this));
       $on(this.fuzzyOpen, 'loading', __bind(function() {
         var loading;
@@ -165,10 +224,13 @@
         file = files[i];
         extension = file.indexOf('.') < 0 ? '' : file.split('.').pop();
         if (extension.length > 7) {
-          extension = extension.substring(0, 7) + '…';
+          extension = ("" + (extension.substring(0, 7)) + "…");
         }
         dirName = file.split('/');
         baseName = dirName.pop();
+        if (baseName.length > 32) {
+          baseName = ("" + (baseName.substring(0, 32)) + "…");
+        }
         html += ("<li" + (i === 0 ? ' class="selected"' : '') + " data-uri=\"" + (escape("" + (this.path) + "/" + file)) + "\">\n  <div class=\"extension\"><strong>" + (escape(extension)) + "</strong></div>\n  <div class=\"file\">\n    <div class=\"name\"><span class=\"icon\" />" + (escape(baseName)) + "</div>\n    <div class=\"path\"><span class=\"directory\">" + ((function() {
           _result = [];
           for (_i = 0, _len2 = dirName.length; _i < _len2; _i++) {
