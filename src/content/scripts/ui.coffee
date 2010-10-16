@@ -105,7 +105,7 @@ this.extensions.fuzzyopen.ui = class UI
       dirName   = file.split '/'
       baseName  = dirName.pop()
       html += """
-      <li#{ if i is 0 then ' class="selected"' else '' }>
+      <li#{ if i is 0 then ' class="selected"' else '' } data-uri="#{ escape "#{@path}/#{file}" }">
         <div class="extension"><strong>#{ escape extension }</strong></div>
         <div class="file">
           <div class="name"><span class="icon" />#{ escape baseName }</div>
@@ -114,6 +114,16 @@ this.extensions.fuzzyopen.ui = class UI
       </li>
       """
     list.innerHTML = html
+    $on list, 'click', (event) =>
+      parent = event.target
+      while parent and parent isnt list
+        uri = parent.getAttribute 'data-uri'
+        if uri
+          list.querySelector('.selected').className = ''
+          ko.open.URI uri
+          parent.className = 'selected'
+          break
+        parent = parent.parentNode
     @resultsElement.appendChild list
 
   @toggleLeftPane: (event) ->

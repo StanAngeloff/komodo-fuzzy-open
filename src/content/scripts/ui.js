@@ -169,7 +169,7 @@
         }
         dirName = file.split('/');
         baseName = dirName.pop();
-        html += ("<li" + (i === 0 ? ' class="selected"' : '') + ">\n  <div class=\"extension\"><strong>" + (escape(extension)) + "</strong></div>\n  <div class=\"file\">\n    <div class=\"name\"><span class=\"icon\" />" + (escape(baseName)) + "</div>\n    <div class=\"path\"><span class=\"directory\">" + ((function() {
+        html += ("<li" + (i === 0 ? ' class="selected"' : '') + " data-uri=\"" + (escape("" + (this.path) + "/" + file)) + "\">\n  <div class=\"extension\"><strong>" + (escape(extension)) + "</strong></div>\n  <div class=\"file\">\n    <div class=\"name\"><span class=\"icon\" />" + (escape(baseName)) + "</div>\n    <div class=\"path\"><span class=\"directory\">" + ((function() {
           _result = [];
           for (_i = 0, _len2 = dirName.length; _i < _len2; _i++) {
             part = dirName[_i];
@@ -179,6 +179,22 @@
         })().join('</span><span class="separator">→<wbr /></span><span class="directory">')) + "</span></div>\n  </div>\n</li>");
       }
       list.innerHTML = html;
+      $on(list, 'click', __bind(function(event) {
+        var _result2, parent, uri;
+        parent = event.target;
+        _result2 = [];
+        while (parent && parent !== list) {
+          uri = parent.getAttribute('data-uri');
+          if (uri) {
+            list.querySelector('.selected').className = '';
+            ko.open.URI(uri);
+            parent.className = 'selected';
+            break;
+          }
+          parent = parent.parentNode;
+        }
+        return _result2;
+      }, this));
       return this.resultsElement.appendChild(list);
     };
     UI.toggleLeftPane = function(event) {

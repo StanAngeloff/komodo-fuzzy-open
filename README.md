@@ -25,5 +25,4 @@ What is not implemented?
 * Unix support
   - should be easy enough if `ls` behaves consistently across distros
   - Fast Open is another good place to look at for multi-platform directory traversal
-* Opening files from results (next on the list)
 * Keyboard or mouse navigation in results

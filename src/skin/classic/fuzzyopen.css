@@ -91,10 +91,14 @@
 }
 
 #fuzzyopen-results html|li.selected html|div.extension html|strong,
+#fuzzyopen-results html|li:hover    html|div.extension html|strong,
 #fuzzyopen-results html|li.selected html|div.file,
+#fuzzyopen-results html|li:hover    html|div.file,
+#fuzzyopen-results html|li:hover    html|div.path,
 #fuzzyopen-results html|li.selected html|div.path {
   color: MenuText;
 }
+
 
 #fuzzyopen-results html|div.loading {
   cursor:        wait;
