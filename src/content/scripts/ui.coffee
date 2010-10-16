@@ -19,12 +19,14 @@ strings = Cc['@mozilla.org/intl/stringbundle;1'].getService(Ci.nsIStringBundleSe
 
 this.extensions.fuzzyopen.ui = class UI
 
-  @top: null
+  @top:     null
+  @maximum: 100
 
-  constructor: (queryId, resultsId, hideList) ->
+  constructor: (queryId, resultsId, workingId, hideList) ->
     return new UI arguments... if this not instanceof UI
     @queryElement   = $element queryId
     @resultsElement = $element resultsId
+    @workingElement = $element workingId
     @hideElements   = if hideList then $element id for id in hideList else []
     @path           = null
     @fuzzyOpen      = extensions.fuzzyopen.FuzzyOpen()
@@ -57,9 +59,13 @@ this.extensions.fuzzyopen.ui = class UI
 
   open: (value) ->
     @toggle yes
+    @isWorking no
+    @fuzzyOpen.stop()
     @fuzzyOpen.find value, @path, (error, result) =>
       @isWorking no
+      @empty()
       return @displayError error if error
+      @displayResult result.slice 0, UI.maximum
 
   hide: ->
     @fuzzyOpen.stop()
@@ -73,21 +79,42 @@ this.extensions.fuzzyopen.ui = class UI
     element.setAttribute 'collapsed', visible for element in @hideElements
 
   isWorking: (flag) ->
-    return unless button = $element 'placesRootButton'
+    className = 'fuzzyopen-working'
     if flag
-      button.className = "#{ button.className or '' } fuzzyopen-working"
+      @workingElement.className = "#{ @workingElement.className or '' } #{className}".trimLeft()
     else
-      button.className = (button.className or '').replace /\s*fuzzyopen-working/, ''
+      @workingElement.className = (@workingElement.className or '').replace ///\s*#{className}\b///, ''
 
   empty: ->
     @resultsElement.removeChild first while first = @resultsElement.childNodes[0]
 
   displayError: (error) ->
-    @empty()
     message = $new 'div', className: 'exception'
     message.innerHTML = "<h2><span>#{ strings.GetStringFromName 'uncaughtError' }</span></h2><pre><code></code></pre>"
     message.getElementsByTagName('code')[0].appendChild document.createTextNode error.message
     @resultsElement.appendChild message
+
+  displayResult: (files) ->
+    return unless files.length
+    escape = (string) -> string.replace /&/g, '&amp;'
+    list   = $new 'ol', id: 'fuzzyopen-list'
+    html   = ''
+    for file, i in files
+      extension = if file.indexOf('.') < 0 then '' else file.split('.').pop()
+      extension = extension.substring(0, 7) + '…' if extension.length > 7
+      dirName   = file.split '/'
+      baseName  = dirName.pop()
+      html += """
+      <li#{ if i is 0 then ' class="selected"' else '' }>
+        <div class="extension"><strong>#{ escape extension }</strong></div>
+        <div class="file">
+          <div class="name"><span class="icon" />#{ escape baseName }</div>
+          <div class="path"><span class="directory">#{ (escape part for part in dirName).join '</span><span class="separator">→<wbr /></span><span class="directory">' }</span></div>
+        </div>
+      </li>
+      """
+    list.innerHTML = html
+    @resultsElement.appendChild list
 
   @toggleLeftPane: (event) ->
     ko.commands.doCommandAsync command = 'cmd_viewLeftPane', event

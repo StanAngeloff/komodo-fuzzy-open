@@ -60,7 +60,7 @@ this.extensions.fuzzyopen.FuzzyOpen = class FuzzyOpen
 
   constructor: ->
     return new FuzzyOpen arguments... if this not instanceof FuzzyOpen
-    @file    = Cc['@activestate.com/koFileEx;1'].createInstance Ci.koIFileEx
+    @uri     = Cc['@activestate.com/koFileEx;1'].createInstance Ci.koIFileEx
     @events  = {}
     @process = null
     @worker  = null
@@ -84,7 +84,7 @@ this.extensions.fuzzyopen.FuzzyOpen = class FuzzyOpen
       @worker.terminate() if @worker
       @worker = new Worker 'chrome://fuzzyopen/content/scripts/workers/exclude.js'
       @worker.onmessage = (event) ->
-        FuzzyOpen.cache[path] = event.data.split '|'
+        FuzzyOpen.cache[path] = if event.data.length then event.data.split '|' else []
         resume null, FuzzyOpen.cache[path]
       @worker.onerror = (event) ->
         resume event
@@ -105,8 +105,8 @@ this.extensions.fuzzyopen.FuzzyOpen = class FuzzyOpen
     throw Error 'FuzzyOpen.scanUnix(..) is not implemented.'
 
   find: (query, uri, resume) ->
-    @file.URI = uri
-    path      = @file.dirName
+    @uri.URI  = uri
+    path      = @uri.dirName
     done      = (error, files) =>
       return resume error if error
       @dispatchEvent 'working'
@@ -123,7 +123,7 @@ this.extensions.fuzzyopen.FuzzyOpen = class FuzzyOpen
     @worker.terminate() if @worker
     @worker = new Worker 'chrome://fuzzyopen/content/scripts/workers/scorize.js'
     @worker.onmessage = (event) ->
-      resume null, event.data.split '|'
+      resume null, if event.data.length then event.data.split '|' else []
     @worker.onerror = (event) ->
       resume event
     @worker.postMessage "#{query}|#{ files.join '|' }"

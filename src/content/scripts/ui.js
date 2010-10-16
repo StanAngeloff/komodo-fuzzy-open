@@ -36,7 +36,7 @@
   strings = Cc['@mozilla.org/intl/stringbundle;1'].getService(Ci.nsIStringBundleService).createBundle('chrome://fuzzyopen/locale/fuzzyopen.properties');
   this.extensions.fuzzyopen.ui = (function() {
     UI = (function() {
-      function UI(queryId, resultsId, hideList) {
+      function UI(queryId, resultsId, workingId, hideList) {
         var _i, _len, _result, id;
         if (!(this instanceof UI)) {
           return (function(func, args, ctor) {
@@ -47,6 +47,7 @@
         }
         this.queryElement = $element(queryId);
         this.resultsElement = $element(resultsId);
+        this.workingElement = $element(workingId);
         this.hideElements = (function() {
           if (hideList) {
             _result = [];
@@ -70,6 +71,7 @@
       return UI;
     })();
     UI.top = null;
+    UI.maximum = 100;
     UI.prototype.addEvents = function() {
       $on(this.queryElement, 'command', __bind(function() {
         var value;
@@ -97,11 +99,15 @@
     };
     UI.prototype.open = function(value) {
       this.toggle(true);
+      this.isWorking(false);
+      this.fuzzyOpen.stop();
       return this.fuzzyOpen.find(value, this.path, __bind(function(error, result) {
         this.isWorking(false);
+        this.empty();
         if (error) {
           return this.displayError(error);
         }
+        return this.displayResult(result.slice(0, UI.maximum));
       }, this));
     };
     UI.prototype.hide = function() {
@@ -122,11 +128,9 @@
       return _result;
     };
     UI.prototype.isWorking = function(flag) {
-      var button;
-      if (!(button = $element('placesRootButton'))) {
-        return;
-      }
-      return flag ? (button.className = ("" + (button.className || '') + " fuzzyopen-working")) : (button.className = (button.className || '').replace(/\s*fuzzyopen-working/, ''));
+      var className;
+      className = 'fuzzyopen-working';
+      return flag ? (this.workingElement.className = ("" + (this.workingElement.className || '') + " " + className).trimLeft()) : (this.workingElement.className = (this.workingElement.className || '').replace(RegExp("\\s*" + className + "\\b"), ''));
     };
     UI.prototype.empty = function() {
       var _result, first;
@@ -138,13 +142,44 @@
     };
     UI.prototype.displayError = function(error) {
       var message;
-      this.empty();
       message = $new('div', {
         className: 'exception'
       });
       message.innerHTML = ("<h2><span>" + (strings.GetStringFromName('uncaughtError')) + "</span></h2><pre><code></code></pre>");
       message.getElementsByTagName('code')[0].appendChild(document.createTextNode(error.message));
       return this.resultsElement.appendChild(message);
+    };
+    UI.prototype.displayResult = function(files) {
+      var _i, _len, _len2, _result, baseName, dirName, escape, extension, file, html, i, list, part;
+      if (!files.length) {
+        return;
+      }
+      escape = function(string) {
+        return string.replace(/&/g, '&amp;');
+      };
+      list = $new('ol', {
+        id: 'fuzzyopen-list'
+      });
+      html = '';
+      for (i = 0, _len = files.length; i < _len; i++) {
+        file = files[i];
+        extension = file.indexOf('.') < 0 ? '' : file.split('.').pop();
+        if (extension.length > 7) {
+          extension = extension.substring(0, 7) + '…';
+        }
+        dirName = file.split('/');
+        baseName = dirName.pop();
+        html += ("<li" + (i === 0 ? ' class="selected"' : '') + ">\n  <div class=\"extension\"><strong>" + (escape(extension)) + "</strong></div>\n  <div class=\"file\">\n    <div class=\"name\"><span class=\"icon\" />" + (escape(baseName)) + "</div>\n    <div class=\"path\"><span class=\"directory\">" + ((function() {
+          _result = [];
+          for (_i = 0, _len2 = dirName.length; _i < _len2; _i++) {
+            part = dirName[_i];
+            _result.push(escape(part));
+          }
+          return _result;
+        })().join('</span><span class="separator">→<wbr /></span><span class="directory">')) + "</span></div>\n  </div>\n</li>");
+      }
+      list.innerHTML = html;
+      return this.resultsElement.appendChild(list);
     };
     UI.toggleLeftPane = function(event) {
       var command;

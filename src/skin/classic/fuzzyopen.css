@@ -50,7 +50,18 @@
   float:      left;
   width:      64px;
   min-height: 32px;
-  font-size:  150%;
+  font-size:  100%;
+  overflow:   hidden;
+  text-align: right;
+}
+
+#fuzzyopen-results html|div.extension html|strong {
+  background-color:   rgba(0, 0, 0, 0.15);
+  color:              ThreeDDarkShadow;
+  text-transform:     uppercase;
+  display:            inline-block;
+  padding:            5px 10px;
+  -moz-border-radius: 2px;
 }
 
 #fuzzyopen-results html|div.file {
@@ -61,31 +72,28 @@
   -moz-box-sizing: border-box;
 }
 
-#fuzzyopen-results html|div.extension html|strong {
-  background:         rgba(0, 0, 0, 0.25);
-  color:              rgba(0, 0, 0, 0.5);
-  text-transform:     uppercase;
-  letter-spacing:     -1px;
-  display:            inline-block;
-  padding:            5px 10px;
-  -moz-border-radius: 2px;
-}
-
 #fuzzyopen-results html|div.path {
   font-size:   90%;
   line-height: 110%;
   font-family: Monaco, Consolas, 'Lucida Console', 'Bitstream Vera Sans Mono', 'DejaVu Sans Mono', 'Courier New', Courier, monospace;
-  color:       rgba(0, 0, 0, 0.5);
+  color:       ThreeDDarkShadow;
   padding-top: 5px;
 }
 
 #fuzzyopen-results html|div.path html|span.separator {
   display: inline;
-  padding: 0 5px;
+  padding: 0 3px;
+  color:   ThreeDShadow;
 }
 
-#fuzzyopen-results html|li:hover {
+#fuzzyopen-results html|li.selected {
   background-color: Menu;
+}
+
+#fuzzyopen-results html|li.selected html|div.extension html|strong,
+#fuzzyopen-results html|li.selected html|div.file,
+#fuzzyopen-results html|li.selected html|div.path {
+  color: MenuText;
 }
 
 #fuzzyopen-results html|div.loading {

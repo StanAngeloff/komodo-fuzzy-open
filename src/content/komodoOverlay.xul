@@ -42,7 +42,7 @@
 
     <script type="application/x-javascript">
     this.addEventListener('load', function() {
-        extensions.fuzzyopen.ui('fuzzyopen-query', 'fuzzyopen-results', ['places-files-tree']);
+        extensions.fuzzyopen.ui('fuzzyopen-query', 'fuzzyopen-results', 'placesRootButton', ['places-files-tree']);
     }, false);
     </script>
 

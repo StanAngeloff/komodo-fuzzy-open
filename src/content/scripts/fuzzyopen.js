@@ -88,7 +88,7 @@
             return typeof result === "object" ? result : child;
           })(FuzzyOpen, arguments, function() {});
         }
-        this.file = Cc['@activestate.com/koFileEx;1'].createInstance(Ci.koIFileEx);
+        this.uri = Cc['@activestate.com/koFileEx;1'].createInstance(Ci.koIFileEx);
         this.events = {};
         this.process = null;
         this.worker = null;
@@ -139,7 +139,7 @@
         }
         this.worker = new Worker('chrome://fuzzyopen/content/scripts/workers/exclude.js');
         this.worker.onmessage = function(event) {
-          FuzzyOpen.cache[path] = event.data.split('|');
+          FuzzyOpen.cache[path] = event.data.length ? event.data.split('|') : [];
           return resume(null, FuzzyOpen.cache[path]);
         };
         this.worker.onerror = function(event) {
@@ -174,8 +174,8 @@
     };
     FuzzyOpen.prototype.find = function(query, uri, resume) {
       var done, path;
-      this.file.URI = uri;
-      path = this.file.dirName;
+      this.uri.URI = uri;
+      path = this.uri.dirName;
       done = __bind(function(error, files) {
         if (error) {
           return resume(error);
@@ -199,7 +199,7 @@
       }
       this.worker = new Worker('chrome://fuzzyopen/content/scripts/workers/scorize.js');
       this.worker.onmessage = function(event) {
-        return resume(null, event.data.split('|'));
+        return resume(null, event.data.length ? event.data.split('|') : []);
       };
       this.worker.onerror = function(event) {
         return resume(event);
