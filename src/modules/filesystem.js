@@ -3,22 +3,16 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 Directory = (function() {
-  return function Directory(_arg, _arg2) {
-    this.parent = _arg2;
+  return function Directory(_arg) {
     this.path = _arg;
-    if (this.parent) {
-      this.base = this.parent.base;
-      this.files = this.parent.files;
-    } else {
-      this.base = this.path;
-      this.files = [];
-    }
+    this.base = this.path;
+    this.files = [];
     this.scan();
     return this;
   };
 })();
 Directory.prototype.scan = function() {
-  var current, directory, iterator, unwrap;
+  var current, directory, iterator, prevPath, unwrap;
   try {
     directory = Cc['@mozilla.org/file/local;1'].createInstance(Ci.nsILocalFile);
     directory.initWithPath(this.path);
@@ -31,7 +25,10 @@ Directory.prototype.scan = function() {
       if (current.isFile()) {
         this.files.push(this.normalize(current.path));
       } else if (current.isDirectory()) {
-        new Directory(current.path, this);
+        prevPath = this.path;
+        this.path = current.path;
+        this.scan();
+        this.path = prevPath;
       }
     }
   } catch (error) {
@@ -40,6 +37,8 @@ Directory.prototype.scan = function() {
     unwrap.result = error.result;
     unwrap.path = this.path;
     throw unwrap;
+  } finally {
+    directory = null;
   }
   return this;
 };

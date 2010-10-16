@@ -1,4 +1,9 @@
-var EXPORTED_SYMBOLS, FuzzyMatch, chunkify, naturalCompare;
+var EXPORTED_SYMBOLS, FuzzyMatch, chunkify, logger, naturalCompare;
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cr = Components.results;
+logger = Cc['@activestate.com/koLoggingService;1'].getService(Ci.koILoggingService).getLogger('fuzzyopen');
+logger.setLevel(10);
 chunkify = function(string) {
   return string.replace(/(\d+)/g, '\u0000$1\u0000').replace(/^\u0000|\u0000$/g, '').split('\u0000').map(function(chunk) {
     var number;
@@ -36,6 +41,7 @@ FuzzyMatch.threshold = 16;
 FuzzyMatch.prototype.find = function(query) {
   var _i, _len, _ref, _result, file, match, result, score;
   query = this.normalize(query);
+  logger.debug(this.files);
   result = (function() {
     _result = [];
     for (_i = 0, _len = (_ref = this.files).length; _i < _len; _i++) {
@@ -58,6 +64,7 @@ FuzzyMatch.prototype.find = function(query) {
     }
     return naturalCompare(prev.file, next.file);
   });
+  logger.debug(JSON.stringify(result));
   _result = [];
   for (_i = 0, _len = result.length; _i < _len; _i++) {
     match = result[_i];
@@ -66,21 +73,22 @@ FuzzyMatch.prototype.find = function(query) {
   return _result;
 };
 FuzzyMatch.prototype.match = function(query, file) {
-  var i, offset, position, score;
+  var _len, _result, i, index, offset, part, parts, score;
+  parts = query.split('');
+  for (index = 0, _len = parts.length; index < _len; index++) {
+    part = parts[index];
+    if (('/' === part || '_' === part || '-' === part || '.' === part) && index < parts.length - 1) {
+      parts.push(part + parts[index + 1]);
+    }
+  }
   offset = 0;
   score = 0;
   i = 0;
-  while (i < query.length) {
-    position = file.substring(offset).indexOf(query.charAt(i));
-    if (position < 0 || position > FuzzyMatch.threshold) {
-      return false;
-    }
-    offset += position + 1;
-    score += Math.pow(FuzzyMatch.threshold - position, 2);
-    i++;
+  _result = [];
+  while (i < parts.length) {
+    _result.push(i++);
   }
-  score -= file.length - offset;
-  return score;
+  return _result;
 };
 FuzzyMatch.prototype.normalize = function(path) {
   return path.replace(/\\/g, '/');

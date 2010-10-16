@@ -5,13 +5,9 @@
 
 class Directory
 
-  constructor: (@path, @parent) ->
-    if @parent
-      @base  = @parent.base
-      @files = @parent.files
-    else
-      @base  = @path
-      @files = []
+  constructor: (@path) ->
+    @base  = @path
+    @files = []
     @scan()
 
   scan: ->
@@ -25,13 +21,18 @@ class Directory
         if current.isFile()
           @files.push @normalize current.path
         else if current.isDirectory()
-          new Directory current.path, this
+          prevPath = @path
+          @path    = current.path
+          @scan()
+          @path    = prevPath
     catch error
       unwrap = new Error
       unwrap.message = error.message
       unwrap.result  = error.result
       unwrap.path    = @path
       throw unwrap
+    finally
+      directory = null
     this
 
   normalize: (path) -> path.substring @base.length

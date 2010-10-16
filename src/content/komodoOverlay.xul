@@ -5,17 +5,17 @@
          id="fuzzyopen">
 
     <stringbundleset>
-        <stringbundle id="strings" src="chrome://fuzzyopen/locale/fuzzyopen.properties" />
+        <stringbundle id="locale" src="chrome://fuzzyopen/locale/fuzzyopen.properties" />
     </stringbundleset>
 
     <script type="application/x-javascript" src="chrome://fuzzyopen/content/scripts/fuzzyopen.js" />
     <script type="application/x-javascript" src="chrome://fuzzyopen/content/scripts/ui.js" />
 
 	<broadcasterset id="broadcasterset_global">
-		<broadcaster id="cmd_fuzzyopen_togglePane"
-					 key="key_cmd_fuzzyopen_togglePane"
-					 desc="&command.togglePane;"
-					 oncommand="extensions.fuzzyopen.togglePane(event)" />
+		<broadcaster id="cmd_fuzzyopen_toggleLeftPane"
+					 key="key_cmd_fuzzyopen_toggleLeftPane"
+					 desc="&command.toggleLeftPane;"
+					 oncommand="extensions.fuzzyopen.toggleLeftPane(event)" />
 	</broadcasterset>
 
     <vbox id="placesViewbox_places">

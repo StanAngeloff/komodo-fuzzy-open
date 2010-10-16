@@ -12,7 +12,7 @@ if (!(typeof extensions !== "undefined" && extensions !== null)) {
   window.extensions = {};
 }
 (function() {
-  var DirectoryJob, FuzzyMatchJob, modules;
+  var DirectoryJob, FuzzyMatchJob, cachedFiles, cachedPath, findJob, isFinding, isUpdating, locale, modules, updateJob;
   const Cc = Components.classes;
   const Ci = Components.interfaces;
   const Cr = Components.results;
@@ -43,83 +43,102 @@ if (!(typeof extensions !== "undefined" && extensions !== null)) {
   FuzzyMatchJob.prototype.execute = function() {
     return (new modules.FuzzyMatch(this.files)).find(this.query);
   };
-  this.strings = null;
-  this.cachedPath = null;
-  this.cachedFiles = null;
-  this.directoryJob = null;
-  this.isWorking = false;
+  locale = null;
+  cachedPath = null;
+  cachedFiles = null;
+  updateJob = null;
+  findJob = null;
+  isUpdating = false;
+  isFinding = false;
   this.update = function(uri) {
     var file, osPathService, path;
     file = Cc['@activestate.com/koFileEx;1'].createInstance(Ci.koIFileEx);
     file.URI = uri;
     osPathService = Cc['@activestate.com/koOsPath;1'].getService(Ci.koIOsPath);
     path = osPathService.join(file.path, '');
-    if (this.cachedPath === path) {
+    if (cachedPath === path) {
       return;
     }
-    if (this.isWorking) {
-      this.directoryJob.shutdown();
+    if (isUpdating) {
+      updateJob.shutdown();
     }
-    this.directoryJob = new DirectoryJob(this.cachedPath = path);
-    this.directoryJob.on('complete', __bind(function(files) {
-      this.isWorking = false;
-      return (this.cachedFiles = files);
+    updateJob = new DirectoryJob(cachedPath = path);
+    updateJob.on('complete', function(files) {
+      isUpdating = false;
+      return (cachedFiles = files);
+    });
+    updateJob.on('failure', __bind(function(error) {
+      isUpdating = false;
+      return this.displayError(error);
     }, this));
-    this.directoryJob.on('failure', __bind(function(error) {
-      this.isWorking = false;
-      return this.catchError(error);
-    }, this));
-    this.directoryJob.spawn();
-    return (this.isWorking = true);
+    updateJob.spawn();
+    return (isUpdating = true);
   };
-  this.catchError = function(error) {
+  this.findFiles = function(query, block) {
+    if (isFinding) {
+      findJob.shutdown();
+    }
+    findJob = new FuzzyMatchJob(cachedFiles, query);
+    findJob.on('complete', function(files) {
+      isFinding = false;
+      return block(files);
+    });
+    findJob.on('failure', __bind(function(error) {
+      isFinding = false;
+      return this.displayError(error);
+    }, this));
+    findJob.spawn();
+    return (isFinding = true);
+  };
+  this.displayError = function(error) {
     var message, title;
-    title = this.strings.getString('uncaughtError');
-    message = this.strings.getFormattedString('unknownError', [error.path, error.toString()]);
+    title = locale.getString('uncaughtError');
+    message = locale.getFormattedString('unknownError', [error.path, error.toString()]);
     switch (error.result) {
       case Cr.NS_ERROR_FILE_NOT_FOUND:
-        message = this.strings.getFormattedString('pathNotFound', [error.path]);
+        message = locale.getFormattedString('pathNotFound', [error.path]);
         break;
       case Cr.NS_ERROR_FILE_NOT_DIRECTORY:
-        message = this.strings.getFormattedString('pathNotADirectory', [error.path]);
+        message = locale.getFormattedString('pathNotADirectory', [error.path]);
         break;
     }
     return ko.dialogs.alert(title, message);
   };
-  this.togglePane = function(event) {
+  this.toggleLeftPane = function(event) {
     ko.commands.doCommandAsync('cmd_viewLeftPane', event);
     return setTimeout(__bind(function() {
-      var box, element, query, results;
+      var box, element;
       element = document.getElementById('cmd_viewLeftPane');
-      if (!(element)) {
+      if (!element) {
         return;
       }
       box = document.getElementById(element.getAttribute('box'));
-      if (!(box)) {
+      if (!box) {
         return;
       }
       if (box.getAttribute('collapsed') !== 'false') {
         return;
       }
-      query = document.getElementById('fuzzyopen-query');
-      results = document.getElementById('fuzzyopen-results');
-      this.ui.start(query, results);
-      return query.getAttribute('disabled') !== 'true' ? query.focus() : undefined;
+      return this.ui.focus('fuzzyopen-query');
     }, this), 125);
+  };
+  this.initialize = function() {
+    var interval;
+    locale = document.getElementById('locale');
+    interval = setInterval(__bind(function() {
+      var _ref, _ref2;
+      if (!(((_ref = ko.places) != null) ? (((_ref2 = _ref.manager) != null) ? _ref2.currentPlace : undefined) : undefined)) {
+        return;
+      }
+      clearInterval(interval);
+      return setTimeout(__bind(function() {
+        return this.update(ko.places.manager.currentPlace);
+      }, this), 125);
+    }, this), 125);
+    return this.ui.link('fuzzyopen-query', 'fuzzyopen-results', ['places-files-tree']);
   };
   return this;
 }).call(extensions.fuzzyopen || (extensions.fuzzyopen = {}));
 window.addEventListener('load', function() {
-  var interval;
-  extensions.fuzzyopen.strings = document.getElementById('strings');
-  return (interval = setInterval(function() {
-    var _ref, _ref2, query, results;
-    if (!((((_ref = ko.places) != null) ? (((_ref2 = _ref.manager) != null) ? _ref2.currentPlace : undefined) : undefined))) {
-      return;
-    }
-    clearInterval(interval);
-    query = document.getElementById('fuzzyopen-query');
-    results = document.getElementById('fuzzyopen-results');
-    return extensions.fuzzyopen.ui.start(query, results);
-  }, 125));
+  return extensions.fuzzyopen.initialize();
 }, false);

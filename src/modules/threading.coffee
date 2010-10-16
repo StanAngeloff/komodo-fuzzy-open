@@ -54,7 +54,7 @@ class AbstractJob
 
   QueryInterface: (iid) ->
     throw Cr.NS_ERROR_NO_INTERFACE if not (iid.equals(Ci.nsIRunnable) or iid.equals(Ci.nsISupports))
-    return this
+    this
 
 
 class JobCompleted
@@ -66,19 +66,18 @@ class JobCompleted
     return false if     JOB_STATUS[@id] is AbstractJob.SHUTDOWN
     return false unless JOB_THREADS[@id]
     try
-      callback.call(this, @result) for callback in JOB_EVENTS[@id][@eventName] if @eventName of JOB_EVENTS[@id]
+      JOB_THREADS[@id].shutdown()
+    finally
+      JOB_THREADS[@id] = null
+      JOB_STATUS[@id]  = AbstractJob.SHUTDOWN
+    try
+      callback.call this, @result for callback in JOB_EVENTS[@id][@eventName] if @eventName of JOB_EVENTS[@id]
     catch error
       Components.utils.reportError error
-    finally
-      try
-        JOB_STATUS[@id] = AbstractJob.SHUTDOWN
-        JOB_THREADS[@id].shutdown()
-      finally
-        JOB_THREADS[@id] = null
 
   QueryInterface: (iid) ->
     throw Cr.NS_ERROR_NO_INTERFACE if not (iid.equals(Ci.nsIRunnable) or iid.equals(Ci.nsISupports))
-    return this
+    this
 
 
 EXPORTED_SYMBOLS = ['AbstractJob', 'JobCompleted']

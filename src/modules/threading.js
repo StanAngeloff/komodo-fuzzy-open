@@ -84,8 +84,14 @@ JobCompleted.prototype.run = function() {
   if (JOB_STATUS[this.id] === AbstractJob.SHUTDOWN) {
     return false;
   }
-  if (!(JOB_THREADS[this.id])) {
+  if (!JOB_THREADS[this.id]) {
     return false;
+  }
+  try {
+    JOB_THREADS[this.id].shutdown();
+  } finally {
+    JOB_THREADS[this.id] = null;
+    JOB_STATUS[this.id] = AbstractJob.SHUTDOWN;
   }
   try {
     if (this.eventName in JOB_EVENTS[this.id]) {
@@ -98,13 +104,6 @@ JobCompleted.prototype.run = function() {
     }
   } catch (error) {
     return Components.utils.reportError(error);
-  } finally {
-    try {
-      JOB_STATUS[this.id] = AbstractJob.SHUTDOWN;
-      JOB_THREADS[this.id].shutdown();
-    } finally {
-      JOB_THREADS[this.id] = null;
-    }
   }
 };
 JobCompleted.prototype.QueryInterface = function(iid) {
