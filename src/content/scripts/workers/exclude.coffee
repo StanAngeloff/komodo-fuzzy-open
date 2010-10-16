@@ -3,11 +3,11 @@
   files    = event.data.split '|'
   excludes = files.shift().split ';'
   tests    = ///
-    (?:^|\/|\\)
+    (?:^|\/)
     #{ pattern.replace(/[-[\]{}()+.,\\^$|#\s]/g, '\\$&')
               .replace(/\?/g, '.')
               .replace(/\*/g, '.*') }
-    (?:\\|\/|$)
+    (?:\/|$)
   /// for pattern in excludes
   for file in files
     pass = yes

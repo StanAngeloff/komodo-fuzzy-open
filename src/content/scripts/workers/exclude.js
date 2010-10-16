@@ -8,7 +8,7 @@
       _result = [];
       for (_i = 0, _len = excludes.length; _i < _len; _i++) {
         pattern = excludes[_i];
-        _result.push(RegExp("(?:^|\\/|\\\\)" + (pattern.replace(/[-[\]{}()+.,\\^$|#\s]/g, '\\$&').replace(/\?/g, '.').replace(/\*/g, '.*')) + "(?:\\\\|\\/|$)"));
+        _result.push(RegExp("(?:^|\\/)" + (pattern.replace(/[-[\]{}()+.,\\^$|#\s]/g, '\\$&').replace(/\?/g, '.').replace(/\*/g, '.*')) + "(?:\\/|$)"));
       }
       return _result;
     })();

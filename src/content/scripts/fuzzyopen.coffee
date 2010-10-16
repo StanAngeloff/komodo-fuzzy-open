@@ -57,7 +57,6 @@ class Process
 this.extensions.fuzzyopen.FuzzyOpen = class FuzzyOpen
 
   @cache: {}
-  @tests: {}
 
   constructor: ->
     return new FuzzyOpen arguments... if this not instanceof FuzzyOpen
@@ -77,14 +76,18 @@ this.extensions.fuzzyopen.FuzzyOpen = class FuzzyOpen
   dispatchEvent: (name, args...) ->
     return null if name not of @events
     event args... for event in @events[name]
+    undefined
 
   scan: (path, resume) ->
     done = (error, files) ->
+      return resume error if error
       @worker.terminate() if @worker
       @worker = new Worker 'chrome://fuzzyopen/content/scripts/workers/exclude.js'
       @worker.onmessage = (event) ->
         FuzzyOpen.cache[path] = event.data.split '|'
-        resume error, FuzzyOpen.cache[path]
+        resume null, FuzzyOpen.cache[path]
+      @worker.onerror = (event) ->
+        resume event
       @worker.postMessage "#{ FuzzyOpen.getExcludes() }|#{ files.join '|' }"
     if infoService.platform.indexOf('win') is 0
       @scanWindows path, done
@@ -94,25 +97,42 @@ this.extensions.fuzzyopen.FuzzyOpen = class FuzzyOpen
   scanWindows: (path, resume) ->
     @process.kill() if @process
     @process = Process ['dir', '/A:-D-H', '/B', '/S', '/O:GNE', path], (output, exitCode) ->
-      return resume Error output if exitCode > 0
-      files = file.substring path.length + 1 for file in output.trimRight().split /\r\n|\r|\n/
+      return resume Error output.substring 0, 4096 if exitCode isnt 0
+      files = file.substring(path.length + 1).replace(/\\/g, '/') for file in output.trimRight().split /\r\n|\r|\n/
       resume null, files
 
   scanUnix: (path, resume) ->
     throw Error 'FuzzyOpen.scanUnix(..) is not implemented.'
 
-  find: (query, path) ->
-    @file.URI    = path
-    absolutePath = @file.dirName
-    resume = (error, files) =>
+  find: (query, uri) ->
+    @file.URI = uri
+    path      = @file.dirName
+    resume    = (error, files) =>
       @dispatchEvent 'working'
       throw error if error
-      alert files
-    if absolutePath not of FuzzyOpen.cache
-      @dispatchEvent 'loading', [absolutePath]
-      @scan absolutePath, resume
+      @scorize query, files, (error, result) ->
+        throw error if error
+        alert result
+    if path not of FuzzyOpen.cache
+      @dispatchEvent 'loading', [path]
+      @scan path, resume
     else
-      resume null, FuzzyOpen.cache[absolutePath]
+      resume null, FuzzyOpen.cache[path]
+
+  scorize: (query, files, resume) ->
+    @worker.terminate() if @worker
+    @worker = new Worker 'chrome://fuzzyopen/content/scripts/workers/scorize.js'
+    @worker.onmessage = (event) ->
+      resume null, event.data.split '|'
+    @worker.onerror = (event) ->
+      resume event
+    @worker.postMessage "#{query}|#{ files.join '|' }"
+
+  stop: ->
+    @worker.terminate() if @worker
+    @process.kill()     if @process
+    @worker  = null
+    @process = null
 
   @getExcludes: ->
     result = []
@@ -121,7 +141,3 @@ this.extensions.fuzzyopen.FuzzyOpen = class FuzzyOpen
     else
       excludes = DEFAULT_PATH_EXCLUDES.join ';'
     excludes
-
-
-open = FuzzyOpen()
-open.find 'coffee', 'D:\\Workspace\\projects\\psp-payments\\server\\zen-cart' # ko.places.manager.currentPlace
