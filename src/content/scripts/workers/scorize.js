@@ -29,7 +29,7 @@
     return 0;
   };
   this.onmessage = function(event) {
-    var _i, _len, _len2, _result, descend, done, file, files, i, part, parts, pending, query, result;
+    var _i, _len, _result, descend, done, file, files, parts, pending, query, result;
     files = event.data.split('|');
     query = files.shift();
     result = {};
@@ -66,6 +66,10 @@
     descend = function(parts, file, remaining, score) {
       var first, key, position;
       first = parts[0];
+      if ((first === '/' || first === '_' || first === '-' || first === '.') && parts.length > 1) {
+        pending++;
+        descend([first + parts[1]].concat(parts.slice(2)), file, remaining, score);
+      }
       while (true) {
         position = remaining.indexOf(first);
         if (position < 0) {
@@ -94,14 +98,8 @@
     };
     pending = files.length;
     parts = query.split('');
-    for (i = 0, _len = parts.length; i < _len; i++) {
-      part = parts[i];
-      if ((part === '/' || part === '_' || part === '-' || part === '.') && i < parts.length - 1) {
-        parts.splice(i, 2, "" + part + (parts[i + 1]));
-      }
-    }
     _result = [];
-    for (_i = 0, _len2 = files.length; _i < _len2; _i++) {
+    for (_i = 0, _len = files.length; _i < _len; _i++) {
       file = files[_i];
       _result.push(descend(parts, file, file, 0));
     }

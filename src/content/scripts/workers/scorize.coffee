@@ -33,6 +33,9 @@ naturalCompare = (prev, next) ->
     postMessage files.join '|'
   descend = (parts, file, remaining, score) ->
     first = parts[0]
+    if first in ['/', '_', '-', '.'] and parts.length > 1
+      pending ++
+      descend [first + parts[1]].concat(parts.slice(2)), file, remaining, score
     loop
       position = remaining.indexOf first
       break if position < 0
@@ -50,6 +53,4 @@ naturalCompare = (prev, next) ->
     done result if pending is 0
   pending = files.length
   parts   = query.split ''
-  for part, i in parts when part in ['/', '_', '-', '.'] and i < parts.length - 1
-    parts.splice i, 2, "#{part}#{ parts[i + 1] }"
   descend parts, file, file, 0 for file in files
