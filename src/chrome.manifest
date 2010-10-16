@@ -1,6 +1,5 @@
 content   fuzzyopen  content/
 locale    fuzzyopen  en-US  locale/en-US/
-resource  fuzzyopen  modules/
 skin      fuzzyopen  classic/1.0  skin/classic/
 
 overlay   chrome://komodo/content/komodo.xul  chrome://fuzzyopen/content/komodoOverlay.xul

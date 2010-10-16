@@ -15,11 +15,18 @@
 		<broadcaster id="cmd_fuzzyopen_toggleLeftPane"
 					 key="key_cmd_fuzzyopen_toggleLeftPane"
 					 desc="&command.toggleLeftPane;"
-					 oncommand="extensions.fuzzyopen.toggleLeftPane(event)" />
+					 oncommand="extensions.fuzzyopen.ui.toggleLeftPane(event)" />
 	</broadcasterset>
 
+    <commandset id="allcommands">
+        <commandset id="cmdset_fuzzyopen_query"
+                    oncommandupdate="extensions.fuzzyopen.ui.top.update(ko.places)"
+                    commandupdater="true"
+                    events="current_place_opened,current_place_changed,current_place_closed" />
+    </commandset>
+
     <vbox id="placesViewbox_places">
-        <hbox id="fuzzyopen-header" insertbefore="places-files-tree">
+        <hbox id="fuzzyopen-box" insertbefore="places-files-tree">
             <textbox id="fuzzyopen-query" type="search" timeout="250" emptytext="&empty;" />
         </hbox>
         <scrollbox id="fuzzyopen-results" collapsed="true" insertafter="places-files-tree">
@@ -36,5 +43,11 @@
             -->
         </scrollbox>
     </vbox>
+
+    <script type="application/x-javascript">
+    this.addEventListener('load', function() {
+        extensions.fuzzyopen.ui('fuzzyopen-query', 'fuzzyopen-results', ['places-files-tree']);
+    }, false);
+    </script>
 
 </overlay>

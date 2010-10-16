@@ -1,98 +1,127 @@
-window.extensions = {} unless extensions?
+`const Cc = Components.classes`
+`const Ci = Components.interfaces`
 
-( ->
-  `const Cc = Components.classes`
-  `const Ci = Components.interfaces`
-  `const Cr = Components.results`
+`const DEFAULT_PATH_EXCLUDES = [
+    '*.pyc', '*.pyo', '*.gz', '*.exe', '*.obj', '.DS_Store',
+    '.svn', '_svn', '.git', 'CVS', '.hg', '.bzr'
+]`
 
-  modules = {}
-  `Components.utils.import('resource://fuzzyopen/filesystem.js',  modules)`
-  `Components.utils.import('resource://fuzzyopen/fuzzymatch.js',  modules)`
-  `Components.utils.import('resource://fuzzyopen/threading.js',   modules)`
+this.extensions = {} unless extensions?
+this.extensions.fuzzyopen = {} unless extensions.fuzzyopen?
 
-
-  class DirectoryJob extends modules.AbstractJob
-    constructor: (@path, id) -> super id
-    execute: -> (new modules.Directory @path).files
-
-
-  class FuzzyMatchJob extends modules.AbstractJob
-    constructor: (@files, @query, id) -> super id
-    execute: -> (new modules.FuzzyMatch @files).find @query
+infoService     = Cc['@activestate.com/koInfoService;1'].getService Ci.koIInfoService
+runService      = Cc['@activestate.com/koRunService;1'].getService Ci.koIRunService
+observerService = Cc['@mozilla.org/observer-service;1'].getService Ci.nsIObserverService
+sysUtils        = Cc['@activestate.com/koSysUtils;1'].getService Ci.koISysUtils
+prefService     = Cc['@activestate.com/koPrefService;1'].getService Ci.koIPrefService
 
 
-  locale       = null
-  cachedPath   = null
-  cachedFiles  = null
-  updateJob    = null
-  findJob      = null
-  isUpdating   = no
-  isFinding    = no
+class Process
 
-  @update = (uri) ->
-    file          = Cc['@activestate.com/koFileEx;1'].createInstance Ci.koIFileEx
-    file.URI      = uri
-    osPathService = Cc['@activestate.com/koOsPath;1'].getService Ci.koIOsPath
-    path          = osPathService.join file.path, ''
-    return if cachedPath is path
-    updateJob.shutdown() if isUpdating
-    updateJob = new DirectoryJob cachedPath = path
-    updateJob.on 'complete', (files) ->
-      isUpdating  = no
-      cachedFiles = files
-    updateJob.on 'failure', (error) =>
-      isUpdating = no
-      @displayError error
-    updateJob.spawn()
-    isUpdating = yes
+  constructor: (@command, @block) ->
+    return new Process arguments... if this not instanceof Process
+    @command = sysUtils.joinargv @command.length, @command if @command instanceof Array
+    observerService.addObserver this, @topic = 'run_terminated', false
+    @process = runService.RunAndNotify @command, null, null, null
+    try
+      @process.wait 0
+      @cleanUp()
 
-  @findFiles = (query, block) ->
-    findJob.shutdown() if isFinding
-    findJob = new FuzzyMatchJob cachedFiles, query
-    findJob.on 'complete', (files) ->
-      isFinding = no
-      block files
-    findJob.on 'failure', (error) =>
-      isFinding = no
-      @displayError error
-    findJob.spawn()
-    isFinding = yes
+  observe: (child, topic, command) ->
+    if topic is @topic and command is @command
+      @cleanUp()
+      @process = null
+    undefined
 
-  @displayError = (error) ->
-    title   = locale.getString 'uncaughtError'
-    message = locale.getFormattedString 'unknownError', [error.path, error.toString()]
-    switch error.result
-      when Cr.NS_ERROR_FILE_NOT_FOUND
-        message = locale.getFormattedString 'pathNotFound', [error.path]
-      when Cr.NS_ERROR_FILE_NOT_DIRECTORY
-        message = locale.getFormattedString 'pathNotADirectory', [error.path]
-    ko.dialogs.alert title, message
+  cleanUp: ->
+    if @command
+      observerService.removeObserver this, @topic
+      @command = null
+    if @process
+      exitCode = @process.wait(-1)
+      output   = @process.getStdout() or @process.getStderr()
+      @block output, exitCode, @process if @block
+      @process = null
+    undefined
 
-  @toggleLeftPane = (event) ->
-    ko.commands.doCommandAsync 'cmd_viewLeftPane', event
-    setTimeout =>
-      element = document.getElementById 'cmd_viewLeftPane'
-      return unless element
-      box = document.getElementById element.getAttribute 'box'
-      return unless box
-      return unless box.getAttribute('collapsed') is 'false'
-      @ui.focus 'fuzzyopen-query'
-    , 125
+  kill: ->
+    if @command
+      observerService.removeObserver this, @topic
+      @command = null
+    if @process
+      @process.kill(-1)
+      @process = null
+    undefined
 
-  @initialize = ->
-    # TODO: monitor set_currentPlaces
-    locale   = document.getElementById 'locale'
-    interval = setInterval =>
-      return unless ko.places?.manager?.currentPlace
-      clearInterval interval
-      setTimeout =>
-        @update ko.places.manager.currentPlace
-      , 125
-    , 125
-    @ui.link 'fuzzyopen-query', 'fuzzyopen-results', ['places-files-tree']
 
-  this
+this.extensions.fuzzyopen.FuzzyOpen = class FuzzyOpen
 
-).call extensions.fuzzyopen or= {}
+  @cache: {}
+  @tests: {}
 
-window.addEventListener 'load', ( -> extensions.fuzzyopen.initialize()), no
+  constructor: ->
+    return new FuzzyOpen arguments... if this not instanceof FuzzyOpen
+    @file    = Cc['@activestate.com/koFileEx;1'].createInstance Ci.koIFileEx
+    @events  = {}
+    @process = null
+    @worker  = null
+
+  addEventListener: (name, block) ->
+    @events[name] = [] if name not of @events
+    @events[name].push block if block not in @events[name]
+
+  removeEventListener: (name, block) ->
+    (return @events[name].splice i, 1) for fn, i in @events[name] when fn is block if name of @events
+    return null
+
+  dispatchEvent: (name, args...) ->
+    return null if name not of @events
+    event args... for event in @events[name]
+
+  scan: (path, resume) ->
+    done = (error, files) ->
+      @worker.terminate() if @worker
+      @worker = new Worker 'chrome://fuzzyopen/content/scripts/workers/exclude.js'
+      @worker.onmessage = (event) ->
+        FuzzyOpen.cache[path] = event.data.split '|'
+        resume error, FuzzyOpen.cache[path]
+      @worker.postMessage "#{ FuzzyOpen.getExcludes() }|#{ files.join '|' }"
+    if infoService.platform.indexOf('win') is 0
+      @scanWindows path, done
+    else
+      @scanUnix path, done
+
+  scanWindows: (path, resume) ->
+    @process.kill() if @process
+    @process = Process ['dir', '/A:-D-H', '/B', '/S', '/O:GNE', path], (output, exitCode) ->
+      return resume Error output if exitCode > 0
+      files = file.substring path.length + 1 for file in output.trimRight().split /\r\n|\r|\n/
+      resume null, files
+
+  scanUnix: (path, resume) ->
+    throw Error 'FuzzyOpen.scanUnix(..) is not implemented.'
+
+  find: (query, path) ->
+    @file.URI    = path
+    absolutePath = @file.dirName
+    resume = (error, files) =>
+      @dispatchEvent 'working'
+      throw error if error
+      alert files
+    if absolutePath not of FuzzyOpen.cache
+      @dispatchEvent 'loading', [absolutePath]
+      @scan absolutePath, resume
+    else
+      resume null, FuzzyOpen.cache[absolutePath]
+
+  @getExcludes: ->
+    result = []
+    if prefService.prefs.hasStringPref key = 'fastopen_path_excludes'
+      excludes = prefService.prefs.getStringPref(key).trim()
+    else
+      excludes = DEFAULT_PATH_EXCLUDES.join ';'
+    excludes
+
+
+open = FuzzyOpen()
+open.find 'coffee', 'D:\\Workspace\\projects\\psp-payments\\server\\zen-cart' # ko.places.manager.currentPlace
