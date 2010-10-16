@@ -145,15 +145,13 @@ this.extensions.fuzzyopen.ui = class UI
     html   = ''
     for file, i in files
       extension = if file.indexOf('.') < 0 then '' else file.split('.').pop()
-      extension = "#{ extension.substring(0, 7) }…" if extension.length > 7
       dirName   = file.split '/'
       baseName  = dirName.pop()
-      baseName  = "#{ baseName.substring(0, 32) }…" if baseName.length > 32
       html += """
       <li#{ if i is 0 then ' class="selected"' else '' } data-uri="#{ escape "#{@path}/#{file}" }">
-        <div class="extension"><strong>#{ escape extension }</strong></div>
+        <div class="extension"><strong><img src="moz-icon://.#{ encodeURIComponent extension or 'txt' }?size=16" />#{ escape if extension.length > 6 then "#{ extension.substring(0, 6) }…" else extension }</strong></div>
         <div class="file">
-          <div class="name"><span class="icon" />#{ escape baseName }</div>
+          <div class="name"><span class="icon" />#{ escape if baseName.length > 32 then "#{ baseName.substring(0, 32) }…" else baseName }</div>
           <div class="path"><span class="directory">#{ (escape part for part in dirName).join '</span><span class="separator">→<wbr /></span><span class="directory">' }</span></div>
         </div>
       </li>

@@ -230,15 +230,9 @@
       for (i = 0, _len = files.length; i < _len; i++) {
         file = files[i];
         extension = file.indexOf('.') < 0 ? '' : file.split('.').pop();
-        if (extension.length > 7) {
-          extension = ("" + (extension.substring(0, 7)) + "…");
-        }
         dirName = file.split('/');
         baseName = dirName.pop();
-        if (baseName.length > 32) {
-          baseName = ("" + (baseName.substring(0, 32)) + "…");
-        }
-        html += ("<li" + (i === 0 ? ' class="selected"' : '') + " data-uri=\"" + (escape("" + (this.path) + "/" + file)) + "\">\n  <div class=\"extension\"><strong>" + (escape(extension)) + "</strong></div>\n  <div class=\"file\">\n    <div class=\"name\"><span class=\"icon\" />" + (escape(baseName)) + "</div>\n    <div class=\"path\"><span class=\"directory\">" + ((function() {
+        html += ("<li" + (i === 0 ? ' class="selected"' : '') + " data-uri=\"" + (escape("" + (this.path) + "/" + file)) + "\">\n  <div class=\"extension\"><strong><img src=\"moz-icon://." + (encodeURIComponent(extension || 'txt')) + "?size=16\" />" + (escape(extension.length > 6 ? ("" + (extension.substring(0, 6)) + "…") : extension)) + "</strong></div>\n  <div class=\"file\">\n    <div class=\"name\"><span class=\"icon\" />" + (escape(baseName.length > 32 ? ("" + (baseName.substring(0, 32)) + "…") : baseName)) + "</div>\n    <div class=\"path\"><span class=\"directory\">" + ((function() {
           _result = [];
           for (_i = 0, _len2 = dirName.length; _i < _len2; _i++) {
             part = dirName[_i];

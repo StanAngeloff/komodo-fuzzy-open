@@ -48,7 +48,7 @@
 
 #fuzzyopen-results html|div.extension {
   float:      left;
-  width:      64px;
+  width:      80px;
   min-height: 32px;
   font-size:  100%;
   overflow:   hidden;
@@ -62,13 +62,21 @@
   display:            inline-block;
   padding:            5px 10px;
   -moz-border-radius: 2px;
+  white-space:        nowrap;
+  vertical-align:     middle;
+}
+
+#fuzzyopen-results html|div.extension html|strong html|img {
+  margin-right:   2px;
+  vertical-align: bottom;
 }
 
 #fuzzyopen-results html|div.file {
   float:           left;
   width:           100%;
-  margin-left:     -64px;
-  padding-left:    74px;
+  margin-top:      -2px;
+  margin-left:     -80px;
+  padding-left:    90px;
   -moz-box-sizing: border-box;
 }
 
