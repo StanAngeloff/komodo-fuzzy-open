@@ -22,7 +22,7 @@
   prefService = Cc['@activestate.com/koPrefService;1'].getService(Ci.koIPrefService);
   Process = (function() {
     function Process(_arg, _arg2) {
-      this.block = _arg2;
+      this.resume = _arg2;
       this.command = _arg;
       if (!(this instanceof Process)) {
         return (function(func, args, ctor) {
@@ -60,8 +60,8 @@
     if (this.process) {
       exitCode = this.process.wait(-1);
       output = this.process.getStdout() || this.process.getStderr();
-      if (this.block) {
-        this.block(output, exitCode, this.process);
+      if (this.resume) {
+        this.resume(output, exitCode, this.process);
       }
       this.process = null;
     }
@@ -172,27 +172,25 @@
     FuzzyOpen.prototype.scanUnix = function(path, resume) {
       throw Error('FuzzyOpen.scanUnix(..) is not implemented.');
     };
-    FuzzyOpen.prototype.find = function(query, uri) {
-      var path, resume;
+    FuzzyOpen.prototype.find = function(query, uri, resume) {
+      var done, path;
       this.file.URI = uri;
       path = this.file.dirName;
-      resume = __bind(function(error, files) {
-        this.dispatchEvent('working');
+      done = __bind(function(error, files) {
         if (error) {
-          throw error;
+          return resume(error);
         }
-        return this.scorize(query, files, function(error, result) {
-          if (error) {
-            throw error;
-          }
-          return alert(result);
-        });
+        this.dispatchEvent('working');
+        return this.scorize(query, files, __bind(function(error, result) {
+          this.dispatchEvent('end');
+          return resume(error, result);
+        }, this));
       }, this);
       if (!(path in FuzzyOpen.cache)) {
         this.dispatchEvent('loading', [path]);
-        return this.scan(path, resume);
+        return this.scan(path, done);
       } else {
-        return resume(null, FuzzyOpen.cache[path]);
+        return done(null, FuzzyOpen.cache[path]);
       }
     };
     FuzzyOpen.prototype.scorize = function(query, files, resume) {
@@ -216,7 +214,8 @@
         this.process.kill();
       }
       this.worker = null;
-      return (this.process = null);
+      this.process = null;
+      return this.dispatchEvent('stop');
     };
     FuzzyOpen.getExcludes = function() {
       var excludes, key, result;

@@ -3,6 +3,11 @@
 @namespace url('http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul');
 @namespace html url('http://www.w3.org/1999/xhtml');
 
+#placesRootButton.fuzzyopen-working,
+#placesRootButton.fuzzyopen-working .toolbarbutton-icon {
+  list-style-image: url('chrome://global/skin/icons/loading_16.png') !important;
+}
+
 #fuzzyopen-query {
 	-moz-appearance:        none;
   background:             Window;
@@ -81,4 +86,47 @@
 
 #fuzzyopen-results html|li:hover {
   background-color: Menu;
+}
+
+#fuzzyopen-results html|div.loading {
+  cursor:        wait;
+  padding:       10px;
+	text-align:    center;
+	-moz-box-flex: 1;
+}
+
+#fuzzyopen-results html|div.loading html|span {
+	background:   transparent url('chrome://global/skin/icons/loading_16.png') no-repeat 0 50%;
+	padding-left: 20px;
+	line-height:  16px;
+}
+
+#fuzzyopen-results html|div.exception {
+  background-color: rgba(255, 0, 0, 0.025);
+  cursor:           default;
+  padding:          10px;
+	-moz-box-flex:    1;
+}
+
+#fuzzyopen-results html|div.exception html|h2 {
+	margin:        0;
+	padding:       0;
+	font-size:     100%;
+	color:         #c00;
+	border-bottom: 1px solid #f00;
+}
+
+#fuzzyopen-results html|div.exception html|h2 {
+  background:   transparent url('chrome://fugue/skin/icons/cross-circle-frame.png') no-repeat 0 50%;
+  padding-left: 20px;
+  line-height:  20px;
+}
+
+#fuzzyopen-results html|div.exception html|pre {
+  white-space: pre-line;
+}
+
+#fuzzyopen-results html|div.exception html|pre html|code {
+  font:  message-box;
+  color: #300;
 }

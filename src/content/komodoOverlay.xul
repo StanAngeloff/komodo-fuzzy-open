@@ -4,10 +4,6 @@
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:html="http://www.w3.org/1999/xhtml"
          id="fuzzyopen">
 
-    <stringbundleset>
-        <stringbundle id="locale" src="chrome://fuzzyopen/locale/fuzzyopen.properties" />
-    </stringbundleset>
-
     <script type="application/x-javascript" src="chrome://fuzzyopen/content/scripts/fuzzyopen.js" />
     <script type="application/x-javascript" src="chrome://fuzzyopen/content/scripts/ui.js" />
 

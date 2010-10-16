@@ -18,7 +18,7 @@ prefService     = Cc['@activestate.com/koPrefService;1'].getService Ci.koIPrefSe
 
 class Process
 
-  constructor: (@command, @block) ->
+  constructor: (@command, @resume) ->
     return new Process arguments... if this not instanceof Process
     @command = sysUtils.joinargv @command.length, @command if @command instanceof Array
     observerService.addObserver this, @topic = 'run_terminated', false
@@ -40,7 +40,7 @@ class Process
     if @process
       exitCode = @process.wait(-1)
       output   = @process.getStdout() or @process.getStderr()
-      @block output, exitCode, @process if @block
+      @resume output, exitCode, @process if @resume
       @process = null
     undefined
 
@@ -104,20 +104,20 @@ this.extensions.fuzzyopen.FuzzyOpen = class FuzzyOpen
   scanUnix: (path, resume) ->
     throw Error 'FuzzyOpen.scanUnix(..) is not implemented.'
 
-  find: (query, uri) ->
+  find: (query, uri, resume) ->
     @file.URI = uri
     path      = @file.dirName
-    resume    = (error, files) =>
+    done      = (error, files) =>
+      return resume error if error
       @dispatchEvent 'working'
-      throw error if error
-      @scorize query, files, (error, result) ->
-        throw error if error
-        alert result
+      @scorize query, files, (error, result) =>
+        @dispatchEvent 'end'
+        resume error, result
     if path not of FuzzyOpen.cache
       @dispatchEvent 'loading', [path]
-      @scan path, resume
+      @scan path, done
     else
-      resume null, FuzzyOpen.cache[path]
+      done null, FuzzyOpen.cache[path]
 
   scorize: (query, files, resume) ->
     @worker.terminate() if @worker
@@ -133,6 +133,7 @@ this.extensions.fuzzyopen.FuzzyOpen = class FuzzyOpen
     @process.kill()     if @process
     @worker  = null
     @process = null
+    @dispatchEvent 'stop'
 
   @getExcludes: ->
     result = []
