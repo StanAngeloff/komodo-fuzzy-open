@@ -106,7 +106,7 @@ this.extensions.fuzzyopen.FuzzyOpen = class FuzzyOpen
 
   find: (query, uri, resume) ->
     @uri.URI  = uri
-    path      = @uri.dirName
+    path      = @uri.path
     done      = (error, files) =>
       return resume error if error
       @dispatchEvent 'working'

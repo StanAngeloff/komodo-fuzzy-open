@@ -175,7 +175,7 @@
     FuzzyOpen.prototype.find = function(query, uri, resume) {
       var done, path;
       this.uri.URI = uri;
-      path = this.uri.dirName;
+      path = this.uri.path;
       done = __bind(function(error, files) {
         if (error) {
           return resume(error);
