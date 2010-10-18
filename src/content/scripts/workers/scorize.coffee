@@ -21,10 +21,8 @@ naturalCompare = (prev, next) ->
   files  = event.data.split '|'
   query  = files.shift()
   result = {}
-  done = (result) ->
-    temp = []
-    for file, score of result
-      temp.push { file: file.substring(1), score }
+  done = () ->
+    temp = file for key, file of result
     temp.sort (prev, next) ->
       return -1 if prev.score > next.score
       return  1 if prev.score < next.score
@@ -45,12 +43,12 @@ naturalCompare = (prev, next) ->
       if parts.length is 1
         score -= remaining.length
         key    = "/#{file}"
-        result[key] = score if key not of result or result[key] < score
+        result[key] = { file, score } if key not of result or result[key].score < score
       else
         pending ++
         descend parts.slice(1), file, remaining, score
     pending --
-    done result if pending is 0
+    done() if pending is 0
   pending = files.length
   parts   = query.split ''
   descend parts, file, file, 0 for file in files

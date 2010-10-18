@@ -10,7 +10,7 @@ $element = (id) -> document.getElementById id
 $on      = (element, event, block) -> element.addEventListener event, block, if event.indexOf('key') is 0 then true else false
 $sleep   = (interval, resume) -> setTimeout resume, interval
 $new     = (tagName, attrs) ->
-  element = document.createElementNS(HTML_NS, tagName)
+  element = document.createElementNS HTML_NS, tagName
   (element[key] = value) for key, value of attrs if attrs
   element
 $stop    = (event) ->

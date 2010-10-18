@@ -33,17 +33,17 @@
     files = event.data.split('|');
     query = files.shift();
     result = {};
-    done = function(result) {
-      var _i, _len, _result, file, score, temp;
-      temp = [];
-      for (file in result) {
-        if (!__hasProp.call(result, file)) continue;
-        score = result[file];
-        temp.push({
-          file: file.substring(1),
-          score: score
-        });
-      }
+    done = function() {
+      var _i, _len, _ref, _result, file, key, temp;
+      temp = (function() {
+        _result = [];
+        for (key in _ref = result) {
+          if (!__hasProp.call(_ref, key)) continue;
+          file = _ref[key];
+          _result.push(file);
+        }
+        return _result;
+      })();
       temp.sort(function(prev, next) {
         if (prev.score > next.score) {
           return -1;
@@ -85,8 +85,11 @@
         if (parts.length === 1) {
           score -= remaining.length;
           key = ("/" + file);
-          if (!(key in result) || result[key] < score) {
-            result[key] = score;
+          if (!(key in result) || result[key].score < score) {
+            result[key] = {
+              file: file,
+              score: score
+            };
           }
         } else {
           pending++;
@@ -94,7 +97,7 @@
         }
       }
       pending--;
-      return pending === 0 ? done(result) : undefined;
+      return pending === 0 ? done() : undefined;
     };
     pending = files.length;
     parts = query.split('');
