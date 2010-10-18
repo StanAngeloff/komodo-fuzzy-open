@@ -1,6 +1,6 @@
 Quickly locate and open files using fuzzy matching:
 
-![Preview](http://i.imgur.com/J3QMO.png)
+![Preview](http://i.imgur.com/RrGqi.png)
 
 How to Install (alpha)
 ======================
