@@ -62,7 +62,7 @@ this.extensions.fuzzyopen.ui = class UI
       @resultsElement.scrollTop += nextBottom - visibleBottom if nextBottom > visibleBottom
 
     $on @queryElement, 'keypress', (event) =>
-      key = event.keyCode
+      key       = event.keyCode
       if key in [KeyEvent.DOM_VK_ENTER, KeyEvent.DOM_VK_RETURN]
         $stop event
         return unless list = getList()
@@ -81,6 +81,17 @@ this.extensions.fuzzyopen.ui = class UI
       else if key is KeyEvent.DOM_VK_DOWN
         $stop event
         move 'down'
+      else if '1' <= (character = String.fromCharCode event.charCode) <= '9' and (event.metaKey or event.ctrlKey)
+        $stop event
+        return unless list = getList()
+        prev = list.querySelector '.selected'
+        next = list.querySelectorAll('.result')[character - '1']
+        prev.className  = '' if prev
+        return unless next
+        next.className  = 'selected'
+        ko.open.URI next.getAttribute 'data-uri'
+        @pushHistory()
+        UI.toggleLeftPane() if this is UI.top
 
     $on @fuzzyOpen, 'loading', =>
       @empty()
@@ -152,7 +163,7 @@ this.extensions.fuzzyopen.ui = class UI
       dirName   = file.file.split '/'
       baseName  = dirName.pop()
       html += """
-      <li#{ if i is 0 then ' class="selected"' else '' } data-uri="#{ escape "#{@path}/#{file.file}" }">
+      <li class="result#{ if i is 0 then ' selected' else '' }" data-uri="#{ escape "#{@path}/#{file.file}" }">
         <div class="extension"><strong><img src="moz-icon://.#{ encodeURIComponent extension or 'txt' }?size=16" />#{ escape extension }</strong></div>
         <div class="file">
           <div class="name"><span class="icon" />#{ escape baseName }</div>

@@ -116,7 +116,7 @@
         return nextBottom > visibleBottom ? this.resultsElement.scrollTop += nextBottom - visibleBottom : undefined;
       }, this);
       $on(this.queryElement, 'keypress', __bind(function(event) {
-        var key, list, selected;
+        var _ref, character, key, list, next, prev, selected;
         key = event.keyCode;
         if ((key === KeyEvent.DOM_VK_ENTER || key === KeyEvent.DOM_VK_RETURN)) {
           $stop(event);
@@ -141,6 +141,23 @@
         } else if (key === KeyEvent.DOM_VK_DOWN) {
           $stop(event);
           return move('down');
+        } else if ((('1' <= (_ref = (character = String.fromCharCode(event.charCode)))) && (_ref <= '9')) && (event.metaKey || event.ctrlKey)) {
+          $stop(event);
+          if (!(list = getList())) {
+            return;
+          }
+          prev = list.querySelector('.selected');
+          next = list.querySelectorAll('.result')[character - '1'];
+          if (prev) {
+            prev.className = '';
+          }
+          if (!next) {
+            return;
+          }
+          next.className = 'selected';
+          ko.open.URI(next.getAttribute('data-uri'));
+          this.pushHistory();
+          return this === UI.top ? UI.toggleLeftPane() : undefined;
         }
       }, this));
       $on(this.fuzzyOpen, 'loading', __bind(function() {
@@ -239,7 +256,7 @@
         extension = file.file.indexOf('.') < 0 ? '' : file.file.split('.').pop();
         dirName = file.file.split('/');
         baseName = dirName.pop();
-        html += ("<li" + (i === 0 ? ' class="selected"' : '') + " data-uri=\"" + (escape("" + (this.path) + "/" + (file.file))) + "\">\n  <div class=\"extension\"><strong><img src=\"moz-icon://." + (encodeURIComponent(extension || 'txt')) + "?size=16\" />" + (escape(extension)) + "</strong></div>\n  <div class=\"file\">\n    <div class=\"name\"><span class=\"icon\" />" + (escape(baseName)) + "</div>\n    <div class=\"path\"><span class=\"directory\">" + ((function() {
+        html += ("<li class=\"result" + (i === 0 ? ' selected' : '') + "\" data-uri=\"" + (escape("" + (this.path) + "/" + (file.file))) + "\">\n  <div class=\"extension\"><strong><img src=\"moz-icon://." + (encodeURIComponent(extension || 'txt')) + "?size=16\" />" + (escape(extension)) + "</strong></div>\n  <div class=\"file\">\n    <div class=\"name\"><span class=\"icon\" />" + (escape(baseName)) + "</div>\n    <div class=\"path\"><span class=\"directory\">" + ((function() {
           _result = [];
           for (_i = 0, _len2 = dirName.length; _i < _len2; _i++) {
             part = dirName[_i];
