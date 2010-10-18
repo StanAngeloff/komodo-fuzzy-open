@@ -173,15 +173,16 @@
       throw Error('FuzzyOpen.scanUnix(..) is not implemented.');
     };
     FuzzyOpen.prototype.find = function(query, uri, resume) {
-      var done, path;
+      var done, normalized, path;
       this.uri.URI = uri;
       path = this.uri.path;
+      normalized = query.replace(/\s+/g, '');
       done = __bind(function(error, files) {
         if (error) {
           return resume(error);
         }
         this.dispatchEvent('working');
-        return this.scorize(query, files, __bind(function(error, result) {
+        return this.scorize(normalized, files, __bind(function(error, result) {
           this.dispatchEvent('end');
           return resume(error, result);
         }, this));

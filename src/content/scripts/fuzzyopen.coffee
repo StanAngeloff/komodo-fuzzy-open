@@ -105,12 +105,13 @@ this.extensions.fuzzyopen.FuzzyOpen = class FuzzyOpen
     throw Error 'FuzzyOpen.scanUnix(..) is not implemented.'
 
   find: (query, uri, resume) ->
-    @uri.URI  = uri
-    path      = @uri.path
-    done      = (error, files) =>
+    @uri.URI   = uri
+    path       = @uri.path
+    normalized = query.replace /\s+/g, ''
+    done       = (error, files) =>
       return resume error if error
       @dispatchEvent 'working'
-      @scorize query, files, (error, result) =>
+      @scorize normalized, files, (error, result) =>
         @dispatchEvent 'end'
         resume error, result
     if path not of FuzzyOpen.cache
