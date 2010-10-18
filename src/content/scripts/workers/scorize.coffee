@@ -34,8 +34,9 @@ naturalCompare = (prev, next) ->
     if first in ['/', '_', '-', '.'] and parts.length > 1
       pending ++
       descend [first + parts[1]].concat(parts.slice(2)), file, remaining, score
+    ignoreCase = first isnt first.toUpperCase()
     loop
-      position = remaining.indexOf first
+      position = if ignoreCase then remaining.toLowerCase().indexOf first else remaining.indexOf first
       break if position < 0
       remaining = remaining.substring position + 1
       break if remaining.length < parts.length - 1

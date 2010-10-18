@@ -64,14 +64,15 @@
       return postMessage(files.join('|'));
     };
     descend = function(parts, file, remaining, score) {
-      var first, key, position;
+      var first, ignoreCase, key, position;
       first = parts[0];
       if ((first === '/' || first === '_' || first === '-' || first === '.') && parts.length > 1) {
         pending++;
         descend([first + parts[1]].concat(parts.slice(2)), file, remaining, score);
       }
+      ignoreCase = first !== first.toUpperCase();
       while (true) {
-        position = remaining.indexOf(first);
+        position = ignoreCase ? remaining.toLowerCase().indexOf(first) : remaining.indexOf(first);
         if (position < 0) {
           break;
         }
