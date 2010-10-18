@@ -138,8 +138,13 @@ this.extensions.fuzzyopen.ui = class UI
     message.getElementsByTagName('code')[0].appendChild document.createTextNode error.message
     @resultsElement.appendChild message
 
+  displayEmpty: ->
+    message = $new 'div', className: 'warning'
+    message.innerHTML = "<p><span>#{ strings.GetStringFromName 'noResults' }</span></p>"
+    @resultsElement.appendChild message
+
   displayResult: (files) ->
-    return unless files.length
+    return @displayEmpty() unless files.length
     escape = (string) -> string.replace /&/g, '&amp;'
     list   = $new 'ol', id: 'fuzzyopen-list'
     html   = ''

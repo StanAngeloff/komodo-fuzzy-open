@@ -215,10 +215,18 @@
       message.getElementsByTagName('code')[0].appendChild(document.createTextNode(error.message));
       return this.resultsElement.appendChild(message);
     };
+    UI.prototype.displayEmpty = function() {
+      var message;
+      message = $new('div', {
+        className: 'warning'
+      });
+      message.innerHTML = ("<p><span>" + (strings.GetStringFromName('noResults')) + "</span></p>");
+      return this.resultsElement.appendChild(message);
+    };
     UI.prototype.displayResult = function(files) {
       var _i, _len, _len2, _result, baseName, dirName, escape, extension, file, html, i, list, part;
       if (!files.length) {
-        return;
+        return this.displayEmpty();
       }
       escape = function(string) {
         return string.replace(/&/g, '&amp;');

@@ -3,4 +3,4 @@
 * Ignore whitespace
 * Reload cache in the background, perhaps add an icon to force a reload as well?
 * Highlight matching characters
-* Display message when no results
+* Ctrl+[1..9] to quickly open at index
