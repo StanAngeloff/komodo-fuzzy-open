@@ -85,7 +85,7 @@ this.extensions.fuzzyopen.ui = class UI
         $stop event
         return unless list = getList()
         prev = list.querySelector '.selected'
-        next = list.querySelectorAll('.result')[character - '1']
+        next = list.querySelectorAll('li')[character - '1']
         prev.className  = '' if prev
         return unless next
         next.className  = 'selected'
@@ -155,19 +155,46 @@ this.extensions.fuzzyopen.ui = class UI
 
   displayResult: (files) ->
     return @displayEmpty() unless files.length
-    escape = (string) -> string.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
-    list   = $new 'ol', id: 'fuzzyopen-list'
-    html   = ''
+    open      = '{{'
+    close     = '}}'
+    escape    = (string) ->
+      string.replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(open, '<em>', 'g')
+            .replace(close, '</em>', 'g')
+    normalize = (string) ->
+      list   = if string instanceof Array then string else [string]
+      result = []
+      while value = list.shift()
+        value = open + value if level > 0
+        level = 0
+        for i in [0...value.length - if level > 0 then close.length else 0]
+          remaining = value.substring i
+          if remaining.indexOf(open) is 0
+            level ++
+          else if remaining.indexOf(close) is 0
+            level --
+        value = open + value  if level < 0
+        value = value + close if level > 0
+        result.push value
+      if string instanceof Array then result else result.join ''
+    list = $new 'ol', id: 'fuzzyopen-list'
+    html = ''
     for file, i in files
-      extension = if file.file.indexOf('.') < 0 then '' else file.file.split('.').pop()
-      dirName   = file.file.split '/'
+      path = file.file
+      for j in [file.groups.length - 1..0]
+        path = "#{ path.substring 0, file.groups[j][0] }#{open}#{ path.substring file.groups[j][0], file.groups[j][1] }#{close}#{ path.substring file.groups[j][1], path.length }"
+      extension = if path.indexOf('.') < 0 then '•' else path.split('.').pop()
+      dirName   = part for part in path.split('/') when part.length
       baseName  = dirName.pop()
       html += """
-      <li class="result#{ if i is 0 then ' selected' else '' }" data-uri="#{ escape "#{@path}/#{file.file}" }">
-        <div class="extension"><strong><img src="moz-icon://.#{ encodeURIComponent extension or 'txt' }?size=16" />#{ escape extension }</strong></div>
+      <li#{ if i is 0 then ' class=" selected"' else '' } data-uri="#{ escape "#{@path}/#{file.file}" }">
+        <div class="extension"><strong><img src="moz-icon://.#{ encodeURIComponent extension or 'txt' }?size=16" />#{ escape normalize extension }</strong></div>
         <div class="file">
-          <div class="name"><span class="icon" />#{ escape baseName }</div>
-          <div class="path"><span class="directory">#{ (escape part for part in dirName).join '</span><span class="separator">→<wbr /></span><span class="directory">' }</span></div>
+          <div class="name"><span class="icon" />#{ escape normalize baseName }</div>
+          <div class="path"><span class="directory">#{ (escape part for part in normalize(part for part in dirName)).join '</span><span class="separator">→<wbr /></span><span class="directory">' }</span></div>
         </div>
       </li>
       """

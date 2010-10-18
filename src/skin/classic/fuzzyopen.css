@@ -46,6 +46,15 @@
   cursor:        pointer;
 }
 
+#fuzzyopen-results html|li html|em {
+  font-style:         normal;
+  font-weight:        bold;
+  display:            inline-block;
+  background:         rgba(255, 255, 0, 0.5);
+  padding:            1px;
+  -moz-border-radius: 2px;
+}
+
 #fuzzyopen-results html|div.extension {
   float:      left;
   width:      80px;

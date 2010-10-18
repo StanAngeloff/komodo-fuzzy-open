@@ -147,7 +147,7 @@
             return;
           }
           prev = list.querySelector('.selected');
-          next = list.querySelectorAll('.result')[character - '1'];
+          next = list.querySelectorAll('li')[character - '1'];
           if (prev) {
             prev.className = '';
           }
@@ -240,12 +240,41 @@
       return this.resultsElement.appendChild(message);
     };
     UI.prototype.displayResult = function(files) {
-      var _i, _len, _len2, _result, baseName, dirName, escape, extension, file, html, i, list, part;
+      var _i, _j, _len, _len2, _ref, _ref2, _result, _result2, baseName, close, dirName, escape, extension, file, html, i, j, list, normalize, open, part, path;
       if (!files.length) {
         return this.displayEmpty();
       }
+      open = '{{';
+      close = '}}';
       escape = function(string) {
-        return string.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        return string.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(open, '<em>', 'g').replace(close, '</em>', 'g');
+      };
+      normalize = function(string) {
+        var _ref, i, level, list, remaining, result, value;
+        list = string instanceof Array ? string : [string];
+        result = [];
+        while (value = list.shift()) {
+          if (level > 0) {
+            value = open + value;
+          }
+          level = 0;
+          for (i = 0, _ref = value.length - (level > 0 ? close.length : 0); (0 <= _ref ? i < _ref : i > _ref); (0 <= _ref ? i += 1 : i -= 1)) {
+            remaining = value.substring(i);
+            if (remaining.indexOf(open) === 0) {
+              level++;
+            } else if (remaining.indexOf(close) === 0) {
+              level--;
+            }
+          }
+          if (level < 0) {
+            value = open + value;
+          }
+          if (level > 0) {
+            value = value + close;
+          }
+          result.push(value);
+        }
+        return string instanceof Array ? result : result.join('');
       };
       list = $new('ol', {
         id: 'fuzzyopen-list'
@@ -253,13 +282,33 @@
       html = '';
       for (i = 0, _len = files.length; i < _len; i++) {
         file = files[i];
-        extension = file.file.indexOf('.') < 0 ? '' : file.file.split('.').pop();
-        dirName = file.file.split('/');
-        baseName = dirName.pop();
-        html += ("<li class=\"result" + (i === 0 ? ' selected' : '') + "\" data-uri=\"" + (escape("" + (this.path) + "/" + (file.file))) + "\">\n  <div class=\"extension\"><strong><img src=\"moz-icon://." + (encodeURIComponent(extension || 'txt')) + "?size=16\" />" + (escape(extension)) + "</strong></div>\n  <div class=\"file\">\n    <div class=\"name\"><span class=\"icon\" />" + (escape(baseName)) + "</div>\n    <div class=\"path\"><span class=\"directory\">" + ((function() {
+        path = file.file;
+        for (j = _ref = file.groups.length - 1; (_ref <= 0 ? j <= 0 : j >= 0); (_ref <= 0 ? j += 1 : j -= 1)) {
+          path = ("" + (path.substring(0, file.groups[j][0])) + open + (path.substring(file.groups[j][0], file.groups[j][1])) + close + (path.substring(file.groups[j][1], path.length)));
+        }
+        extension = path.indexOf('.') < 0 ? '•' : path.split('.').pop();
+        dirName = (function() {
           _result = [];
-          for (_i = 0, _len2 = dirName.length; _i < _len2; _i++) {
-            part = dirName[_i];
+          for (_i = 0, _len2 = (_ref2 = path.split('/')).length; _i < _len2; _i++) {
+            part = _ref2[_i];
+            if (part.length) {
+              _result.push(part);
+            }
+          }
+          return _result;
+        })();
+        baseName = dirName.pop();
+        html += ("<li" + (i === 0 ? ' class=" selected"' : '') + " data-uri=\"" + (escape("" + (this.path) + "/" + (file.file))) + "\">\n  <div class=\"extension\"><strong><img src=\"moz-icon://." + (encodeURIComponent(extension || 'txt')) + "?size=16\" />" + (escape(normalize(extension))) + "</strong></div>\n  <div class=\"file\">\n    <div class=\"name\"><span class=\"icon\" />" + (escape(normalize(baseName))) + "</div>\n    <div class=\"path\"><span class=\"directory\">" + ((function() {
+          _result = [];
+          for (_i = 0, _len2 = (_ref2 = normalize((function() {
+            _result2 = [];
+            for (_j = 0, _len2 = dirName.length; _j < _len2; _j++) {
+              part = dirName[_j];
+              _result2.push(part);
+            }
+            return _result2;
+          })())).length; _i < _len2; _i++) {
+            part = _ref2[_i];
             _result.push(escape(part));
           }
           return _result;
@@ -267,9 +316,9 @@
       }
       list.innerHTML = html;
       $on(list, 'click', __bind(function(event) {
-        var _result2, parent, uri;
+        var _result3, parent, uri;
         parent = event.target;
-        _result2 = [];
+        _result3 = [];
         while (parent && parent !== list) {
           uri = parent.getAttribute('data-uri');
           if (uri) {
@@ -280,7 +329,7 @@
           }
           parent = parent.parentNode;
         }
-        return _result2;
+        return _result3;
       }, this));
       return this.resultsElement.appendChild(list);
     };
