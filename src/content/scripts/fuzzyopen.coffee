@@ -75,7 +75,7 @@ this.extensions.fuzzyopen.FuzzyOpen = class FuzzyOpen
 
   dispatchEvent: (name, args...) ->
     return null if name not of @events
-    event args... for event in @events[name]
+    block args... for block in @events[name]
     undefined
 
   scan: (path, resume) ->
@@ -84,11 +84,11 @@ this.extensions.fuzzyopen.FuzzyOpen = class FuzzyOpen
       @worker.terminate() if @worker
       @worker = new Worker 'chrome://fuzzyopen/content/scripts/workers/exclude.js'
       @worker.onmessage = (event) ->
-        FuzzyOpen.cache[path] = if event.data.length then event.data.split '|' else []
+        FuzzyOpen.cache[path] = event.data or []
         resume null, FuzzyOpen.cache[path]
       @worker.onerror = (event) ->
         resume event
-      @worker.postMessage "#{ FuzzyOpen.getExcludes() }|#{ files.join '|' }"
+      @worker.postMessage { excludes: FuzzyOpen.getExcludes(), files }
     if infoService.platform.indexOf('win') is 0
       @scanWindows path, done
     else
@@ -124,10 +124,10 @@ this.extensions.fuzzyopen.FuzzyOpen = class FuzzyOpen
     @worker.terminate() if @worker
     @worker = new Worker 'chrome://fuzzyopen/content/scripts/workers/scorize.js'
     @worker.onmessage = (event) ->
-      resume null, if event.data.length then event.data.split '|' else []
+      resume null, event.data or []
     @worker.onerror = (event) ->
       resume event
-    @worker.postMessage "#{query}|#{ files.join '|' }"
+    @worker.postMessage { query, files }
 
   stop: ->
     @worker.terminate() if @worker

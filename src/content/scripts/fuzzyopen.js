@@ -117,14 +117,14 @@
       return null;
     };
     FuzzyOpen.prototype.dispatchEvent = function(name) {
-      var _i, _len, _ref, args, event;
+      var _i, _len, _ref, args, block;
       args = __slice.call(arguments, 1);
       if (!(name in this.events)) {
         return null;
       }
       for (_i = 0, _len = (_ref = this.events[name]).length; _i < _len; _i++) {
-        event = _ref[_i];
-        event.apply(event, args);
+        block = _ref[_i];
+        block.apply(block, args);
       }
       return undefined;
     };
@@ -139,13 +139,16 @@
         }
         this.worker = new Worker('chrome://fuzzyopen/content/scripts/workers/exclude.js');
         this.worker.onmessage = function(event) {
-          FuzzyOpen.cache[path] = event.data.length ? event.data.split('|') : [];
+          FuzzyOpen.cache[path] = event.data || [];
           return resume(null, FuzzyOpen.cache[path]);
         };
         this.worker.onerror = function(event) {
           return resume(event);
         };
-        return this.worker.postMessage("" + (FuzzyOpen.getExcludes()) + "|" + (files.join('|')));
+        return this.worker.postMessage({
+          excludes: FuzzyOpen.getExcludes(),
+          files: files
+        });
       };
       return infoService.platform.indexOf('win') === 0 ? this.scanWindows(path, done) : this.scanUnix(path, done);
     };
@@ -200,12 +203,15 @@
       }
       this.worker = new Worker('chrome://fuzzyopen/content/scripts/workers/scorize.js');
       this.worker.onmessage = function(event) {
-        return resume(null, event.data.length ? event.data.split('|') : []);
+        return resume(null, event.data || []);
       };
       this.worker.onerror = function(event) {
         return resume(event);
       };
-      return this.worker.postMessage("" + query + "|" + (files.join('|')));
+      return this.worker.postMessage({
+        query: query,
+        files: files
+      });
     };
     FuzzyOpen.prototype.stop = function() {
       if (this.worker) {

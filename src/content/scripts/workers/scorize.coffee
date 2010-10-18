@@ -18,8 +18,6 @@ naturalCompare = (prev, next) ->
   return 0
 
 @onmessage = (event) ->
-  files  = event.data.split '|'
-  query  = files.shift()
   result = {}
   done = () ->
     temp = file for key, file of result
@@ -28,7 +26,7 @@ naturalCompare = (prev, next) ->
       return  1 if prev.score < next.score
       return naturalCompare prev.file, next.file
     files = file.file for file in temp
-    postMessage files.join '|'
+    postMessage files
   descend = (parts, file, remaining, score) ->
     first = parts[0]
     if first in ['/', '_', '-', '.'] and parts.length > 1
@@ -50,6 +48,6 @@ naturalCompare = (prev, next) ->
         descend parts.slice(1), file, remaining, score
     pending --
     done() if pending is 0
-  pending = files.length
-  parts   = query.split ''
-  descend parts, file, file, 0 for file in files
+  pending = event.data.files.length
+  parts   = event.data.query.split ''
+  descend parts, file, file, 0 for file in event.data.files

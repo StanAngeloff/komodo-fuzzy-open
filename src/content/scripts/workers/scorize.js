@@ -29,12 +29,10 @@
     return 0;
   };
   this.onmessage = function(event) {
-    var _i, _len, _result, descend, done, file, files, parts, pending, query, result;
-    files = event.data.split('|');
-    query = files.shift();
+    var _i, _len, _ref, _result, descend, done, file, parts, pending, result;
     result = {};
     done = function() {
-      var _i, _len, _ref, _result, file, key, temp;
+      var _i, _len, _ref, _result, file, files, key, temp;
       temp = (function() {
         _result = [];
         for (key in _ref = result) {
@@ -61,7 +59,7 @@
         }
         return _result;
       })();
-      return postMessage(files.join('|'));
+      return postMessage(files);
     };
     descend = function(parts, file, remaining, score) {
       var first, ignoreCase, key, position;
@@ -100,11 +98,11 @@
       pending--;
       return pending === 0 ? done() : undefined;
     };
-    pending = files.length;
-    parts = query.split('');
+    pending = event.data.files.length;
+    parts = event.data.query.split('');
     _result = [];
-    for (_i = 0, _len = files.length; _i < _len; _i++) {
-      file = files[_i];
+    for (_i = 0, _len = (_ref = event.data.files).length; _i < _len; _i++) {
+      file = _ref[_i];
       _result.push(descend(parts, file, file, 0));
     }
     return _result;
