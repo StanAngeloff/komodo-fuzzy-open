@@ -15,6 +15,23 @@ observerService = Cc['@mozilla.org/observer-service;1'].getService Ci.nsIObserve
 sysUtils        = Cc['@activestate.com/koSysUtils;1'].getService Ci.koISysUtils
 prefService     = Cc['@activestate.com/koPrefService;1'].getService Ci.koIPrefService
 
+chunkify = (string) ->
+  string
+    .replace(/(\d+)/g, '\u0000$1\u0000')
+    .replace(/^\u0000|\u0000$/g, '')
+    .split('\u0000')
+    .map (chunk) -> if isNaN number = parseInt chunk, 10 then chunk else number
+
+naturalCompare = (prev, next) ->
+  prev = chunkify ('' + prev).toLowerCase()
+  next = chunkify ('' + next).toLowerCase()
+  for i in [0...Math.max prev.length, next.length]
+    return -1 if i >= prev.length
+    return  1 if i >= next.length
+    return -1 if prev[i] < next[i]
+    return  1 if prev[i] > next[i]
+  return 0
+
 
 class Process
 
@@ -56,7 +73,9 @@ class Process
 
 this.extensions.fuzzyopen.FuzzyOpen = class FuzzyOpen
 
-  @cache: {}
+  @cache:    {}
+  @poolSize: 8
+  @maximum:  100
 
   constructor: ->
     return new FuzzyOpen arguments... if this not instanceof FuzzyOpen
@@ -64,6 +83,7 @@ this.extensions.fuzzyopen.FuzzyOpen = class FuzzyOpen
     @events  = {}
     @process = null
     @worker  = null
+    @pool    = null for worker in [0...FuzzyOpen.poolSize]
 
   addEventListener: (name, block) ->
     @events[name] = [] if name not of @events
@@ -86,8 +106,8 @@ this.extensions.fuzzyopen.FuzzyOpen = class FuzzyOpen
       @worker.onmessage = (event) ->
         FuzzyOpen.cache[path] = event.data or []
         resume null, FuzzyOpen.cache[path]
-      @worker.onerror = (event) ->
-        resume event
+      @worker.onerror = (error) ->
+        resume error
       @worker.postMessage { excludes: FuzzyOpen.getExcludes(), files }
     if infoService.platform.indexOf('win') is 0
       @scanWindows path, done
@@ -121,17 +141,44 @@ this.extensions.fuzzyopen.FuzzyOpen = class FuzzyOpen
       done null, FuzzyOpen.cache[path]
 
   scorize: (query, files, resume) ->
-    @worker.terminate() if @worker
-    @worker = new Worker 'chrome://fuzzyopen/content/scripts/workers/scorize.js'
-    @worker.onmessage = (event) ->
-      resume null, event.data or []
-    @worker.onerror = (event) ->
-      resume event
-    @worker.postMessage { query, files }
+    worker.terminate() for worker in @pool when worker
+    pending      = 0
+    offset       = 0
+    chunk        = Math.floor(files.length / FuzzyOpen.poolSize) or 1
+    workerError  = null
+    workerResult = []
+    done         = (error, result) ->
+      pending --
+      workerError  = error if error and not workerError
+      workerResult = workerResult.concat result
+      if pending is 0
+        workerResult.sort (prev, next) ->
+          return -1 if prev.groups.length < next.groups.length
+          return  1 if prev.groups.length > next.groups.length
+          return -1 if prev.score[0] > next.score[0]
+          return  1 if prev.score[0] < next.score[0]
+          return -1 if prev.score[1] < next.score[1]
+          return  1 if prev.score[1] > next.score[1]
+          return  naturalCompare prev.file, next.file
+        resume workerError, workerResult.slice 0, FuzzyOpen.maximum
+    for i in [0...FuzzyOpen.poolSize]
+      slice   = files.slice offset, if i is FuzzyOpen.poolSize - 1 then files.length else offset + chunk
+      offset += slice.length
+      @pool[i] = new Worker 'chrome://fuzzyopen/content/scripts/workers/scorize.js'
+      @pool[i].onmessage = (event) ->
+        done null, event.data or []
+      @pool[i].onerror = (error) ->
+        done error
+      pending ++
+      @pool[i].postMessage { query, files: slice }
+      break if offset >= files.length
+    undefined
 
   stop: ->
+    worker.terminate()  for worker in @pool when worker
     @worker.terminate() if @worker
     @process.kill()     if @process
+    @pool    = null     for worker in [0...FuzzyOpen.poolSize]
     @worker  = null
     @process = null
     @dispatchEvent 'stop'

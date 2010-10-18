@@ -76,7 +76,6 @@
     })();
     UI.top = null;
     UI.history = [];
-    UI.maximum = 100;
     UI.prototype.addEvents = function() {
       var getList, move;
       $on(this.queryElement, 'command', __bind(function() {
@@ -173,7 +172,7 @@
         if (error) {
           return this.displayError(error);
         }
-        return this.displayResult(result.slice(0, UI.maximum));
+        return this.displayResult(result);
       }, this));
     };
     UI.prototype.hide = function() {
@@ -212,7 +211,7 @@
         className: 'exception'
       });
       message.innerHTML = ("<h2><span>" + (strings.GetStringFromName('uncaughtError')) + "</span></h2><pre><code></code></pre>");
-      message.getElementsByTagName('code')[0].appendChild(document.createTextNode(error.message));
+      message.getElementsByTagName('code')[0].appendChild(document.createTextNode("" + (error.message) + ", " + (error.filename) + ":" + (error.lineno)));
       return this.resultsElement.appendChild(message);
     };
     UI.prototype.displayEmpty = function() {
@@ -229,7 +228,7 @@
         return this.displayEmpty();
       }
       escape = function(string) {
-        return string.replace(/&/g, '&amp;');
+        return string.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
       };
       list = $new('ol', {
         id: 'fuzzyopen-list'
@@ -237,10 +236,10 @@
       html = '';
       for (i = 0, _len = files.length; i < _len; i++) {
         file = files[i];
-        extension = file.indexOf('.') < 0 ? '' : file.split('.').pop();
-        dirName = file.split('/');
+        extension = file.file.indexOf('.') < 0 ? '' : file.file.split('.').pop();
+        dirName = file.file.split('/');
         baseName = dirName.pop();
-        html += ("<li" + (i === 0 ? ' class="selected"' : '') + " data-uri=\"" + (escape("" + (this.path) + "/" + file)) + "\">\n  <div class=\"extension\"><strong><img src=\"moz-icon://." + (encodeURIComponent(extension || 'txt')) + "?size=16\" />" + (escape(extension.length > 6 ? ("" + (extension.substring(0, 6)) + "…") : extension)) + "</strong></div>\n  <div class=\"file\">\n    <div class=\"name\"><span class=\"icon\" />" + (escape(baseName.length > 32 ? ("" + (baseName.substring(0, 32)) + "…") : baseName)) + "</div>\n    <div class=\"path\"><span class=\"directory\">" + ((function() {
+        html += ("<li" + (i === 0 ? ' class="selected"' : '') + " data-uri=\"" + (escape("" + (this.path) + "/" + (file.file))) + "\">\n  <div class=\"extension\"><strong><img src=\"moz-icon://." + (encodeURIComponent(extension || 'txt')) + "?size=16\" />" + (escape(extension)) + "</strong></div>\n  <div class=\"file\">\n    <div class=\"name\"><span class=\"icon\" />" + (escape(baseName)) + "</div>\n    <div class=\"path\"><span class=\"directory\">" + ((function() {
           _result = [];
           for (_i = 0, _len2 = dirName.length; _i < _len2; _i++) {
             part = dirName[_i];

@@ -24,7 +24,6 @@ this.extensions.fuzzyopen.ui = class UI
 
   @top:     null
   @history: []
-  @maximum: 100
 
   constructor: (queryId, resultsId, workingId, hideList) ->
     return new UI arguments... if this not instanceof UI
@@ -109,7 +108,7 @@ this.extensions.fuzzyopen.ui = class UI
       @isWorking no
       @empty()
       return @displayError error if error
-      @displayResult result.slice 0, UI.maximum
+      @displayResult result
 
   hide: ->
     @fuzzyOpen.stop()
@@ -135,7 +134,7 @@ this.extensions.fuzzyopen.ui = class UI
   displayError: (error) ->
     message = $new 'div', className: 'exception'
     message.innerHTML = "<h2><span>#{ strings.GetStringFromName 'uncaughtError' }</span></h2><pre><code></code></pre>"
-    message.getElementsByTagName('code')[0].appendChild document.createTextNode error.message
+    message.getElementsByTagName('code')[0].appendChild document.createTextNode "#{error.message}, #{error.filename}:#{error.lineno}"
     @resultsElement.appendChild message
 
   displayEmpty: ->
@@ -145,18 +144,18 @@ this.extensions.fuzzyopen.ui = class UI
 
   displayResult: (files) ->
     return @displayEmpty() unless files.length
-    escape = (string) -> string.replace /&/g, '&amp;'
+    escape = (string) -> string.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
     list   = $new 'ol', id: 'fuzzyopen-list'
     html   = ''
     for file, i in files
-      extension = if file.indexOf('.') < 0 then '' else file.split('.').pop()
-      dirName   = file.split '/'
+      extension = if file.file.indexOf('.') < 0 then '' else file.file.split('.').pop()
+      dirName   = file.file.split '/'
       baseName  = dirName.pop()
       html += """
-      <li#{ if i is 0 then ' class="selected"' else '' } data-uri="#{ escape "#{@path}/#{file}" }">
-        <div class="extension"><strong><img src="moz-icon://.#{ encodeURIComponent extension or 'txt' }?size=16" />#{ escape if extension.length > 6 then "#{ extension.substring(0, 6) }…" else extension }</strong></div>
+      <li#{ if i is 0 then ' class="selected"' else '' } data-uri="#{ escape "#{@path}/#{file.file}" }">
+        <div class="extension"><strong><img src="moz-icon://.#{ encodeURIComponent extension or 'txt' }?size=16" />#{ escape extension }</strong></div>
         <div class="file">
-          <div class="name"><span class="icon" />#{ escape if baseName.length > 32 then "#{ baseName.substring(0, 32) }…" else baseName }</div>
+          <div class="name"><span class="icon" />#{ escape baseName }</div>
           <div class="path"><span class="directory">#{ (escape part for part in dirName).join '</span><span class="separator">→<wbr /></span><span class="directory">' }</span></div>
         </div>
       </li>

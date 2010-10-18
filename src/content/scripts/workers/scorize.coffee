@@ -1,53 +1,57 @@
 threshold = 16
 
-chunkify = (string) ->
-  string
-    .replace(/(\d+)/g, '\u0000$1\u0000')
-    .replace(/^\u0000|\u0000$/g, '')
-    .split('\u0000')
-    .map (chunk) -> if isNaN number = parseInt chunk, 10 then chunk else number
-
-naturalCompare = (prev, next) ->
-  prev = chunkify ('' + prev).toLowerCase()
-  next = chunkify ('' + next).toLowerCase()
-  for i in [0...Math.max prev.length, next.length]
-    return -1 if i >= prev.length
-    return  1 if i >= next.length
-    return -1 if prev[i] < next[i]
-    return  1 if prev[i] > next[i]
-  return 0
-
 @onmessage = (event) ->
   result = {}
-  done = () ->
-    temp = file for key, file of result
-    temp.sort (prev, next) ->
-      return -1 if prev.score > next.score
-      return  1 if prev.score < next.score
-      return naturalCompare prev.file, next.file
-    files = file.file for file in temp
+  done   = ->
+    files   = []
+    for key, hits of result
+      file = []
+      for hit in hits
+        groups = []
+        for i in [0...length = hit.groups.length]
+          j = i
+          i ++ while i < length - 1 and hit.groups[i][1] is hit.groups[i + 1][0]
+          groups.push [hit.groups[j][0], hit.groups[i][1]]
+        score = [0, 0]
+        score[0] += Math.pow 2, group[1] - group[0] for group in groups when 0 < group[1] - group[0] < threshold * 2
+        for i in [0...groups.length - 1]
+          score[1] += groups[i + 1][0] - groups[i][1]
+        file.push { file: hit.file, score, groups }
+      file.sort (prev, next) ->
+        return -1 if prev.score[0] > next.score[0]
+        return  1 if prev.score[0] < next.score[0]
+        return -1 if prev.score[1] < next.score[1]
+        return  1 if prev.score[1] > next.score[1]
+        return  0
+      files.push file[0]
     postMessage files
-  descend = (parts, file, remaining, score) ->
-    first = parts[0]
-    if first in ['/', '_', '-', '.'] and parts.length > 1
+  descend = (parts, file, remaining, offset, groups) ->
+    remaining or= file
+    offset    or= 0
+    groups    or= []
+    first       = parts[0]
+    if ['/', '_', '-', '.'].indexOf(first) >= 0 and parts.length > 1
       pending ++
-      descend [first + parts[1]].concat(parts.slice(2)), file, remaining, score
+      descend [first + parts[1]].concat(parts.slice 2), file, remaining, offset, groups
     ignoreCase = first isnt first.toUpperCase()
     loop
-      position = if ignoreCase then remaining.toLowerCase().indexOf first else remaining.indexOf first
+      before    = remaining
+      position  = if ignoreCase then remaining.toLowerCase().indexOf first else remaining.indexOf first
       break if position < 0
-      remaining = remaining.substring position + 1
+      remaining = remaining.substring advance = position + first.length
       break if remaining.length < parts.length - 1
-      score += Math.pow threshold - position, first.length + 1 if position < threshold
+      offset   += advance
+      groups.push [offset - first.length, offset]
       if parts.length is 1
-        score -= remaining.length
-        key    = "/#{file}"
-        result[key] = { file, score } if key not of result or result[key].score < score
+        key = "/#{file}"
+        result[key] = [] if key not of result
+        result[key].push offset: offset, groups: Array::slice.call(groups), file
       else
         pending ++
-        descend parts.slice(1), file, remaining, score
+        descend parts.slice(1), file, remaining, offset, groups
+      groups.pop()
     pending --
     done() if pending is 0
   pending = event.data.files.length
   parts   = event.data.query.split ''
-  descend parts, file, file, 0 for file in event.data.files
+  descend parts, file for file in event.data.files
