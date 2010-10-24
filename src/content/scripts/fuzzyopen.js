@@ -131,7 +131,7 @@
       return FuzzyOpen;
     })();
     FuzzyOpen.cache = {};
-    FuzzyOpen.poolSize = 8;
+    FuzzyOpen.poolSize = 4;
     FuzzyOpen.maximum = 100;
     FuzzyOpen.prototype.addEventListener = function(name, block) {
       var _i, _len, _ref;
@@ -192,7 +192,7 @@
       if (this.process) {
         this.process.kill();
       }
-      return (this.process = Process(['dir', '/A:-D-H', '/B', '/S', '/O:GNE', path], function(output, exitCode) {
+      return (this.process = Process(['dir', '/A:-D-H', '/B', '/S', path], function(output, exitCode) {
         var _i, _len, _ref, _result, file, files;
         if (exitCode !== 0) {
           return resume(Error(output.substring(0, 4096)));

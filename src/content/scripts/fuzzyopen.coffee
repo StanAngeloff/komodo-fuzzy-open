@@ -74,7 +74,7 @@ class Process
 this.extensions.fuzzyopen.FuzzyOpen = class FuzzyOpen
 
   @cache:    {}
-  @poolSize: 8
+  @poolSize: 4
   @maximum:  100
 
   constructor: ->
@@ -116,7 +116,7 @@ this.extensions.fuzzyopen.FuzzyOpen = class FuzzyOpen
 
   scanWindows: (path, resume) ->
     @process.kill() if @process
-    @process = Process ['dir', '/A:-D-H', '/B', '/S', '/O:GNE', path], (output, exitCode) ->
+    @process = Process ['dir', '/A:-D-H', '/B', '/S', path], (output, exitCode) ->
       return resume Error output.substring 0, 4096 if exitCode isnt 0
       files = file.substring(path.length + 1).replace(/\\/g, '/') for file in output.trimRight().split /\r\n|\r|\n/
       resume null, files
