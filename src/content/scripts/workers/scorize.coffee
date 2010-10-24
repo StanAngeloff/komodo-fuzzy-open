@@ -8,13 +8,14 @@ threshold = 16
       file = []
       for hit in hits
         groups = []
-        for i in [0...length = hit.groups.length]
+        for i from 0 to (length = hit.groups.length) - 1
           j = i
-          i ++ while i < length - 1 and hit.groups[i][1] is hit.groups[i + 1][0]
+          i++ while i < length - 1 and hit.groups[i][1] is hit.groups[i + 1][0]
           groups.push [hit.groups[j][0], hit.groups[i][1]]
         score = [0, 0]
-        score[0] += Math.pow 2, group[1] - group[0] for group in groups when 0 < group[1] - group[0] < threshold * 2
-        for i in [0...groups.length - 1]
+        for group in groups when 0 < group[1] - group[0] < threshold * 2
+          score[0] += Math.pow 2, group[1] - group[0]
+        for i from 0 to groups.length - 2
           score[1] += groups[i + 1][0] - groups[i][1]
         file.push { file: hit.file, score, groups }
       file.sort (prev, next) ->
@@ -31,7 +32,7 @@ threshold = 16
     groups    or= []
     first       = parts[0]
     if ['/', '_', '-', '.'].indexOf(first) >= 0 and parts.length > 1
-      pending ++
+      pending++
       descend [first + parts[1]].concat(parts.slice 2), file, remaining, offset, groups
     ignoreCase = first isnt first.toUpperCase()
     loop
@@ -47,10 +48,10 @@ threshold = 16
         result[key] = [] if key not of result
         result[key].push offset: offset, groups: Array::slice.call(groups), file
       else
-        pending ++
+        pending++
         descend parts.slice(1), file, remaining, offset, groups
       groups.pop()
-    pending --
+    pending--
     done() if pending is 0
   pending = event.data.files.length
   parts   = event.data.query.split ''

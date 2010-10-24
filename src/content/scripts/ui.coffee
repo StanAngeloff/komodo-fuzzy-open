@@ -170,12 +170,12 @@ this.extensions.fuzzyopen.ui = class UI
       while value = list.shift()
         value = open + value if level > 0
         level = 0
-        for i in [0...value.length - if level > 0 then close.length else 0]
+        for i from 0 to (value.length - if level > 0 then close.length + 1 else 1)
           remaining = value.substring i
           if remaining.indexOf(open) is 0
-            level ++
+            level++
           else if remaining.indexOf(close) is 0
-            level --
+            level--
         value = open + value  if level < 0
         value = value + close if level > 0
         result.push value
@@ -184,7 +184,7 @@ this.extensions.fuzzyopen.ui = class UI
     html = ''
     for file, i in files
       path = file.file
-      for j in [file.groups.length - 1..0]
+      for j from file.groups.length - 1 to 0 by -1
         path = "#{ path.substring 0, file.groups[j][0] }#{open}#{ path.substring file.groups[j][0], file.groups[j][1] }#{close}#{ path.substring file.groups[j][1], path.length }"
       extension = if path.indexOf('.') < 0 then '•' else path.split('.').pop()
       dirName   = part for part in path.split('/') when part.length

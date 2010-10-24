@@ -25,7 +25,7 @@ chunkify = (string) ->
 naturalCompare = (prev, next) ->
   prev = chunkify ('' + prev).toLowerCase()
   next = chunkify ('' + next).toLowerCase()
-  for i in [0...Math.max prev.length, next.length]
+  for i from 0 to Math.max(prev.length, next.length) - 1
     return -1 if i >= prev.length
     return  1 if i >= next.length
     return -1 if prev[i] < next[i]
@@ -83,14 +83,15 @@ this.extensions.fuzzyopen.FuzzyOpen = class FuzzyOpen
     @events  = {}
     @process = null
     @worker  = null
-    @pool    = null for worker in [0...FuzzyOpen.poolSize]
+    @pool    = null for worker from 0 to FuzzyOpen.poolSize - 1
 
   addEventListener: (name, block) ->
     @events[name] = [] if name not of @events
     @events[name].push block if block not in @events[name]
 
   removeEventListener: (name, block) ->
-    (return @events[name].splice i, 1) for fn, i in @events[name] when fn is block if name of @events
+    if name of @events then for fn, i in @events[name] when fn is block
+      return @events[name].splice i, 1
     return null
 
   dispatchEvent: (name, args...) ->
@@ -148,7 +149,7 @@ this.extensions.fuzzyopen.FuzzyOpen = class FuzzyOpen
     workerError  = null
     workerResult = []
     done         = (error, result) ->
-      pending --
+      pending--
       workerError  = error if error and not workerError
       workerResult = workerResult.concat result
       if pending is 0
@@ -161,15 +162,15 @@ this.extensions.fuzzyopen.FuzzyOpen = class FuzzyOpen
           return  1 if prev.score[1] > next.score[1]
           return  naturalCompare prev.file, next.file
         resume workerError, workerResult.slice 0, FuzzyOpen.maximum
-    for i in [0...FuzzyOpen.poolSize]
-      slice   = files.slice offset, if i is FuzzyOpen.poolSize - 1 then files.length else offset + chunk
-      offset += slice.length
+    for i from 0 to FuzzyOpen.poolSize - 1
+      slice    = files.slice offset, if i is FuzzyOpen.poolSize - 1 then files.length else offset + chunk
+      offset  += slice.length
       @pool[i] = new Worker 'chrome://fuzzyopen/content/scripts/workers/scorize.js'
       @pool[i].onmessage = (event) ->
         done null, event.data or []
       @pool[i].onerror = (error) ->
         done error
-      pending ++
+      pending++
       @pool[i].postMessage { query, files: slice }
       break if offset >= files.length
     undefined
@@ -178,7 +179,7 @@ this.extensions.fuzzyopen.FuzzyOpen = class FuzzyOpen
     worker.terminate()  for worker in @pool when worker
     @worker.terminate() if @worker
     @process.kill()     if @process
-    @pool    = null     for worker in [0...FuzzyOpen.poolSize]
+    @pool    = null     for worker from 0 to FuzzyOpen.poolSize - 1
     @worker  = null
     @process = null
     @dispatchEvent 'stop'

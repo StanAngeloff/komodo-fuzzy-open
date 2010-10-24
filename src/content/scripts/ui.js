@@ -28,7 +28,7 @@
       for (key in attrs) {
         if (!__hasProp.call(attrs, key)) continue;
         value = attrs[key];
-        (element[key] = value);
+        element[key] = value;
       }
     }
     return element;
@@ -85,7 +85,7 @@
       }, this));
       getList = __bind(function() {
         var _ref, list;
-        return (((_ref = (list = this.resultsElement.childNodes[0])) != null) ? _ref.id : undefined) === 'fuzzyopen-list' ? list : null;
+        return ((_ref = (list = this.resultsElement.childNodes[0])) != null ? _ref.id : undefined) === 'fuzzyopen-list' ? list : null;
       }, this);
       move = __bind(function(direction) {
         var list, next, nextBottom, nextTop, prev, visibleBottom, visibleTop;
@@ -118,7 +118,7 @@
       $on(this.queryElement, 'keypress', __bind(function(event) {
         var _ref, character, key, list, next, prev, selected;
         key = event.keyCode;
-        if ((key === KeyEvent.DOM_VK_ENTER || key === KeyEvent.DOM_VK_RETURN)) {
+        if (key === KeyEvent.DOM_VK_ENTER || key === KeyEvent.DOM_VK_RETURN) {
           $stop(event);
           if (!(list = getList())) {
             return;
@@ -141,7 +141,7 @@
         } else if (key === KeyEvent.DOM_VK_DOWN) {
           $stop(event);
           return move('down');
-        } else if ((('1' <= (_ref = (character = String.fromCharCode(event.charCode)))) && (_ref <= '9')) && (event.metaKey || event.ctrlKey)) {
+        } else if (('1' <= (_ref = (character = String.fromCharCode(event.charCode))) && _ref <= '9') && (event.metaKey || event.ctrlKey)) {
           $stop(event);
           if (!(list = getList())) {
             return;
@@ -166,7 +166,7 @@
         loading = $new('div', {
           className: 'loading'
         });
-        loading.innerHTML = ("<p><span>" + (strings.GetStringFromName('loading')) + "</span></p>");
+        loading.innerHTML = "<p><span>" + (strings.GetStringFromName('loading')) + "</span></p>";
         return this.resultsElement.appendChild(loading);
       }, this));
       return $on(this.fuzzyOpen, 'working', __bind(function() {
@@ -202,8 +202,9 @@
     UI.prototype.toggle = function(visible) {
       var _i, _len, _ref, _result, element;
       this.resultsElement.setAttribute('collapsed', !visible);
+      _ref = this.hideElements;
       _result = [];
-      for (_i = 0, _len = (_ref = this.hideElements).length; _i < _len; _i++) {
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         element = _ref[_i];
         _result.push(element.setAttribute('collapsed', visible));
       }
@@ -212,7 +213,7 @@
     UI.prototype.isWorking = function(flag) {
       var className;
       className = 'fuzzyopen-working';
-      return flag ? (this.workingElement.className = ("" + (this.workingElement.className || '') + " " + className).trimLeft()) : (this.workingElement.className = (this.workingElement.className || '').replace(RegExp("\\s*" + className + "\\b"), ''));
+      return flag ? this.workingElement.className = ("" + (this.workingElement.className || '') + " " + className).trimLeft() : this.workingElement.className = (this.workingElement.className || '').replace(RegExp("\\s*" + className + "\\b"), '');
     };
     UI.prototype.empty = function() {
       var _result, first;
@@ -227,8 +228,8 @@
       message = $new('div', {
         className: 'exception'
       });
-      message.innerHTML = ("<h2><span>" + (strings.GetStringFromName('uncaughtError')) + "</span></h2><pre><code></code></pre>");
-      message.getElementsByTagName('code')[0].appendChild(document.createTextNode("" + (error.message) + ", " + (error.filename) + ":" + (error.lineno)));
+      message.innerHTML = "<h2><span>" + (strings.GetStringFromName('uncaughtError')) + "</span></h2><pre><code></code></pre>";
+      message.getElementsByTagName('code')[0].appendChild(document.createTextNode("" + error.message + ", " + error.filename + ":" + error.lineno));
       return this.resultsElement.appendChild(message);
     };
     UI.prototype.displayEmpty = function() {
@@ -236,11 +237,11 @@
       message = $new('div', {
         className: 'warning'
       });
-      message.innerHTML = ("<p><span>" + (strings.GetStringFromName('noResults')) + "</span></p>");
+      message.innerHTML = "<p><span>" + (strings.GetStringFromName('noResults')) + "</span></p>";
       return this.resultsElement.appendChild(message);
     };
     UI.prototype.displayResult = function(files) {
-      var _i, _j, _len, _len2, _ref, _ref2, _result, _result2, baseName, close, dirName, escape, extension, file, html, i, j, list, normalize, open, part, path;
+      var _i, _j, _len, _len2, _ref, _result, baseName, close, dirName, escape, extension, file, html, i, j, list, normalize, open, part, path;
       if (!files.length) {
         return this.displayEmpty();
       }
@@ -250,7 +251,7 @@
         return string.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(open, '<em>', 'g').replace(close, '</em>', 'g');
       };
       normalize = function(string) {
-        var _ref, i, level, list, remaining, result, value;
+        var _to, i, level, list, remaining, result, value;
         list = string instanceof Array ? string : [string];
         result = [];
         while (value = list.shift()) {
@@ -258,7 +259,7 @@
             value = open + value;
           }
           level = 0;
-          for (i = 0, _ref = value.length - (level > 0 ? close.length : 0); (0 <= _ref ? i < _ref : i > _ref); (0 <= _ref ? i += 1 : i -= 1)) {
+          for (i = 0, _to = value.length - (level > 0 ? close.length + 1 : 1); i <= _to; i++) {
             remaining = value.substring(i);
             if (remaining.indexOf(open) === 0) {
               level++;
@@ -283,14 +284,15 @@
       for (i = 0, _len = files.length; i < _len; i++) {
         file = files[i];
         path = file.file;
-        for (j = _ref = file.groups.length - 1; (_ref <= 0 ? j <= 0 : j >= 0); (_ref <= 0 ? j += 1 : j -= 1)) {
-          path = ("" + (path.substring(0, file.groups[j][0])) + open + (path.substring(file.groups[j][0], file.groups[j][1])) + close + (path.substring(file.groups[j][1], path.length)));
+        for (j = file.groups.length - 1; j >= 0; j--) {
+          path = "" + (path.substring(0, file.groups[j][0])) + open + (path.substring(file.groups[j][0], file.groups[j][1])) + close + (path.substring(file.groups[j][1], path.length));
         }
         extension = path.indexOf('.') < 0 ? '•' : path.split('.').pop();
         dirName = (function() {
+          _ref = path.split('/');
           _result = [];
-          for (_i = 0, _len2 = (_ref2 = path.split('/')).length; _i < _len2; _i++) {
-            part = _ref2[_i];
+          for (_i = 0, _len2 = _ref.length; _i < _len2; _i++) {
+            part = _ref[_i];
             if (part.length) {
               _result.push(part);
             }
@@ -298,27 +300,28 @@
           return _result;
         })();
         baseName = dirName.pop();
-        html += ("<li" + (i === 0 ? ' class=" selected"' : '') + " data-uri=\"" + (escape("" + (this.path) + "/" + (file.file))) + "\">\n  <div class=\"extension\"><strong><img src=\"moz-icon://." + (encodeURIComponent(extension || 'txt')) + "?size=16\" />" + (escape(normalize(extension))) + "</strong></div>\n  <div class=\"file\">\n    <div class=\"name\"><span class=\"icon\" />" + (escape(normalize(baseName))) + "</div>\n    <div class=\"path\"><span class=\"directory\">" + ((function() {
-          _result = [];
-          for (_i = 0, _len2 = (_ref2 = normalize((function() {
-            _result2 = [];
+        html += "<li" + (i === 0 ? ' class=" selected"' : '') + " data-uri=\"" + (escape("" + this.path + "/" + file.file)) + "\">\n  <div class=\"extension\"><strong><img src=\"moz-icon://." + (encodeURIComponent(extension || 'txt')) + "?size=16\" />" + (escape(normalize(extension))) + "</strong></div>\n  <div class=\"file\">\n    <div class=\"name\"><span class=\"icon\" />" + (escape(normalize(baseName))) + "</div>\n    <div class=\"path\"><span class=\"directory\">" + (((function() {
+          _ref = normalize((function() {
+            _result = [];
             for (_j = 0, _len2 = dirName.length; _j < _len2; _j++) {
               part = dirName[_j];
-              _result2.push(part);
+              _result.push(part);
             }
-            return _result2;
-          })())).length; _i < _len2; _i++) {
-            part = _ref2[_i];
+            return _result;
+          })());
+          _result = [];
+          for (_i = 0, _len2 = _ref.length; _i < _len2; _i++) {
+            part = _ref[_i];
             _result.push(escape(part));
           }
           return _result;
-        })().join('</span><span class="separator">→<wbr /></span><span class="directory">')) + "</span></div>\n  </div>\n</li>");
+        })()).join('</span><span class="separator">→<wbr /></span><span class="directory">')) + "</span></div>\n  </div>\n</li>";
       }
       list.innerHTML = html;
       $on(list, 'click', __bind(function(event) {
-        var _result3, parent, uri;
+        var _result2, parent, uri;
         parent = event.target;
-        _result3 = [];
+        _result2 = [];
         while (parent && parent !== list) {
           uri = parent.getAttribute('data-uri');
           if (uri) {
@@ -327,16 +330,17 @@
             parent.className = 'selected';
             break;
           }
-          parent = parent.parentNode;
+          _result2.push(parent = parent.parentNode);
         }
-        return _result3;
+        return _result2;
       }, this));
       return this.resultsElement.appendChild(list);
     };
     UI.prototype.pushHistory = function() {
       var _len, _ref, i, stored, value;
       value = this.queryElement.value.trim();
-      for (i = 0, _len = (_ref = UI.history).length; i < _len; i++) {
+      _ref = UI.history;
+      for (i = 0, _len = _ref.length; i < _len; i++) {
         stored = _ref[i];
         if (stored === value) {
           UI.history.splice(i, 1);

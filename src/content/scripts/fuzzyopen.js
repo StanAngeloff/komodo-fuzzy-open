@@ -1,6 +1,9 @@
 (function() {
   var FuzzyOpen, Process, chunkify, infoService, naturalCompare, observerService, prefService, runService, sysUtils;
-  var __slice = Array.prototype.slice, __bind = function(func, context) {
+  var __indexOf = Array.prototype.indexOf || function(item) {
+    for (var i = 0, l = this.length; i < l; i++) if (this[i] === item) return i;
+    return -1;
+  }, __slice = Array.prototype.slice, __bind = function(func, context) {
     return function() { return func.apply(context, arguments); };
   };
   const Cc = Components.classes;
@@ -27,10 +30,10 @@
     });
   };
   naturalCompare = function(prev, next) {
-    var _ref, i;
+    var _to, i;
     prev = chunkify(('' + prev).toLowerCase());
     next = chunkify(('' + next).toLowerCase());
-    for (i = 0, _ref = Math.max(prev.length, next.length); (0 <= _ref ? i < _ref : i > _ref); (0 <= _ref ? i += 1 : i -= 1)) {
+    for (i = 0, _to = Math.max(prev.length, next.length) - 1; i <= _to; i++) {
       if (i >= prev.length) {
         return -1;
       }
@@ -107,7 +110,7 @@
   this.extensions.fuzzyopen.FuzzyOpen = (function() {
     FuzzyOpen = (function() {
       function FuzzyOpen() {
-        var _ref, _result, worker;
+        var _result, _to, worker;
         if (!(this instanceof FuzzyOpen)) {
           return (function(func, args, ctor) {
             ctor.prototype = func.prototype;
@@ -121,7 +124,7 @@
         this.worker = null;
         this.pool = (function() {
           _result = [];
-          for (worker = 0, _ref = FuzzyOpen.poolSize; (0 <= _ref ? worker < _ref : worker > _ref); (0 <= _ref ? worker += 1 : worker -= 1)) {
+          for (worker = 0, _to = FuzzyOpen.poolSize - 1; worker <= _to; worker++) {
             _result.push(null);
           }
           return _result;
@@ -134,16 +137,16 @@
     FuzzyOpen.poolSize = 4;
     FuzzyOpen.maximum = 100;
     FuzzyOpen.prototype.addEventListener = function(name, block) {
-      var _i, _len, _ref;
       if (!(name in this.events)) {
         this.events[name] = [];
       }
-      return !(function(){ for (var _i=0, _len=(_ref = this.events[name]).length; _i<_len; _i++) { if (_ref[_i] === block) return true; } return false; }).call(this) ? this.events[name].push(block) : undefined;
+      return __indexOf.call(this.events[name], block) < 0 ? this.events[name].push(block) : undefined;
     };
     FuzzyOpen.prototype.removeEventListener = function(name, block) {
       var _len, _ref, fn, i;
       if (name in this.events) {
-        for (i = 0, _len = (_ref = this.events[name]).length; i < _len; i++) {
+        _ref = this.events[name];
+        for (i = 0, _len = _ref.length; i < _len; i++) {
           fn = _ref[i];
           if (fn === block) {
             return this.events[name].splice(i, 1);
@@ -158,7 +161,8 @@
       if (!(name in this.events)) {
         return null;
       }
-      for (_i = 0, _len = (_ref = this.events[name]).length; _i < _len; _i++) {
+      _ref = this.events[name];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         block = _ref[_i];
         block.apply(block, args);
       }
@@ -192,21 +196,22 @@
       if (this.process) {
         this.process.kill();
       }
-      return (this.process = Process(['dir', '/A:-D-H', '/B', '/S', path], function(output, exitCode) {
+      return this.process = Process(['dir', '/A:-D-H', '/B', '/S', path], function(output, exitCode) {
         var _i, _len, _ref, _result, file, files;
         if (exitCode !== 0) {
           return resume(Error(output.substring(0, 4096)));
         }
         files = (function() {
+          _ref = output.trimRight().split(/\r\n|\r|\n/);
           _result = [];
-          for (_i = 0, _len = (_ref = output.trimRight().split(/\r\n|\r|\n/)).length; _i < _len; _i++) {
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
             file = _ref[_i];
             _result.push(file.substring(path.length + 1).replace(/\\/g, '/'));
           }
           return _result;
         })();
         return resume(null, files);
-      }));
+      });
     };
     FuzzyOpen.prototype.scanUnix = function(path, resume) {
       throw Error('FuzzyOpen.scanUnix(..) is not implemented.');
@@ -234,8 +239,9 @@
       }
     };
     FuzzyOpen.prototype.scorize = function(query, files, resume) {
-      var _i, _j, _len, _ref, _ref2, chunk, done, i, offset, pending, slice, worker, workerError, workerResult;
-      for (_i = 0, _len = (_ref = this.pool).length; _i < _len; _i++) {
+      var _i, _len, _ref, _to, chunk, done, i, offset, pending, slice, worker, workerError, workerResult;
+      _ref = this.pool;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         worker = _ref[_i];
         if (worker) {
           worker.terminate();
@@ -277,8 +283,7 @@
           return resume(workerError, workerResult.slice(0, FuzzyOpen.maximum));
         }
       };
-      for (_j = 0, _ref2 = FuzzyOpen.poolSize; (0 <= _ref2 ? _j < _ref2 : _j > _ref2); (0 <= _ref2 ? _j += 1 : _j -= 1)) {
-        var i = _j;
+      for (i = 0, _to = FuzzyOpen.poolSize - 1; i <= _to; i++) {
         slice = files.slice(offset, i === FuzzyOpen.poolSize - 1 ? files.length : offset + chunk);
         offset += slice.length;
         this.pool[i] = new Worker('chrome://fuzzyopen/content/scripts/workers/scorize.js');
@@ -300,8 +305,9 @@
       return undefined;
     };
     FuzzyOpen.prototype.stop = function() {
-      var _i, _len, _ref, _ref2, _result, worker;
-      for (_i = 0, _len = (_ref = this.pool).length; _i < _len; _i++) {
+      var _i, _len, _ref, _result, _to, worker;
+      _ref = this.pool;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         worker = _ref[_i];
         if (worker) {
           worker.terminate();
@@ -315,7 +321,7 @@
       }
       this.pool = (function() {
         _result = [];
-        for (worker = 0, _ref2 = FuzzyOpen.poolSize; (0 <= _ref2 ? worker < _ref2 : worker > _ref2); (0 <= _ref2 ? worker += 1 : worker -= 1)) {
+        for (worker = 0, _to = FuzzyOpen.poolSize - 1; worker <= _to; worker++) {
           _result.push(null);
         }
         return _result;
