@@ -213,8 +213,42 @@
         return resume(null, files);
       });
     };
+	
+    FuzzyOpen.prototype.isImplemented = function(magicFile) {
+	  
+	  var aFile = Components.classes["@mozilla.org/file/local;1"]
+				  .createInstance(Components.interfaces.nsILocalFile);
+	  aFile.initWithPath(magicFile);
+	  
+	  if(!aFile.exists())
+		return false;
+	  else
+		return true;
+	}
     FuzzyOpen.prototype.scanUnix = function(path, resume) {
-      throw Error('FuzzyOpen.scanUnix(..) is not implemented.');
+
+	  if(!this.isImplemented('/etc/fedora-release'))
+		throw Error('FuzzyOpen.scanX(..) is not implemented.');
+	  
+	  if (this.process) {
+		this.process.kill();
+	  }
+	  //skip hidden files
+	  return (this.process = Process(["find", path], function(output, exitCode) {
+		var _i, _len, _ref, _result, file, files;
+		if (exitCode !== 0) {
+		  return resume(Error(output.substring(0, 4096)));
+		}
+		files = (function() {
+		  _result = [];
+		  for (_i = 0, _len = (_ref = output.trimRight().split(/\r\n|\r|\n/)).length; _i < _len; _i++) {
+			file = _ref[_i];
+			_result.push(file.substring(path.length + 1).replace(/\\/g, '/'));
+		  }
+		  return _result;
+		})();
+		return resume(null, files);
+	  }));
     };
     FuzzyOpen.prototype.find = function(query, uri, resume) {
       var done, normalized, path;

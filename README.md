@@ -10,7 +10,7 @@ instructions. You can find your XRE/extensions directory path [in the docs](http
 
 Extension ID: `fuzzyopen@psp-webtech.co.uk`
 
-**Platforms supported**: Windows only (XP, Vista, 7)
+**Platforms supported**: Windows  (XP, Vista, 7), Linux (Fedora)
 
 What is working?
 ================
@@ -23,6 +23,6 @@ What is working?
 What is not implemented?
 ========================
 
-* Unix support
+* Unix support on some distributions..
   - should be easy enough if `ls` behaves consistently across distros
   - Fast Open is another good place to look at for multi-platform directory traversal
