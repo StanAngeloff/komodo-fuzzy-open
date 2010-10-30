@@ -83,7 +83,7 @@ this.extensions.fuzzyopen.FuzzyOpen = class FuzzyOpen
     @events  = {}
     @process = null
     @worker  = null
-    @pool    = null for worker from 0 to FuzzyOpen.poolSize - 1
+    @pool    = (null for worker from 0 to FuzzyOpen.poolSize - 1)
 
   addEventListener: (name, block) ->
     @events[name] = [] if name not of @events
@@ -119,11 +119,15 @@ this.extensions.fuzzyopen.FuzzyOpen = class FuzzyOpen
     @process.kill() if @process
     @process = Process ['dir', '/A:-D-H', '/B', '/S', path], (output, exitCode) ->
       return resume Error output.substring 0, 4096 if exitCode isnt 0
-      files = file.substring(path.length + 1).replace(/\\/g, '/') for file in output.trimRight().split /\r\n|\r|\n/
+      files = (file.substring(path.length + 1).replace(/\\/g, '/') for file in output.trimRight().split /\r\n|\r|\n/)
       resume null, files
 
   scanUnix: (path, resume) ->
-    throw Error 'FuzzyOpen.scanUnix(..) is not implemented.'
+    @process.kill() if @process
+    @process = Process ['find', path, '-type', 'f'], (output, exitCode) ->
+      return resume Error output.substring 0, 4096 if exitCode isnt 0
+      files = (file.substring(path.length + 1) for file in output.trimRight().split /\r\n|\r|\n/)
+      resume null, files
 
   find: (query, uri, resume) ->
     @uri.URI   = uri
@@ -179,7 +183,7 @@ this.extensions.fuzzyopen.FuzzyOpen = class FuzzyOpen
     worker.terminate()  for worker in @pool when worker
     @worker.terminate() if @worker
     @process.kill()     if @process
-    @pool    = null     for worker from 0 to FuzzyOpen.poolSize - 1
+    @pool    = (null    for worker from 0 to FuzzyOpen.poolSize - 1)
     @worker  = null
     @process = null
     @dispatchEvent 'stop'

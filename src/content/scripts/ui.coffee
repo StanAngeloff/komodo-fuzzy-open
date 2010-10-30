@@ -187,7 +187,7 @@ this.extensions.fuzzyopen.ui = class UI
       for j from file.groups.length - 1 to 0 by -1
         path = "#{ path.substring 0, file.groups[j][0] }#{open}#{ path.substring file.groups[j][0], file.groups[j][1] }#{close}#{ path.substring file.groups[j][1], path.length }"
       extension = if path.indexOf('.') < 0 then '•' else path.split('.').pop()
-      dirName   = part for part in path.split('/') when part.length
+      dirName   = (part for part in path.split('/') when part.length)
       baseName  = dirName.pop()
       html += """
       <li#{ if i is 0 then ' class=" selected"' else '' } data-uri="#{ escape "#{@path}/#{file.file}" }">

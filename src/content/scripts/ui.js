@@ -71,7 +71,7 @@
         }
         this.addEvents();
         return this;
-      };
+      }
       return UI;
     })();
     UI.top = null;
@@ -288,7 +288,7 @@
           path = "" + (path.substring(0, file.groups[j][0])) + open + (path.substring(file.groups[j][0], file.groups[j][1])) + close + (path.substring(file.groups[j][1], path.length));
         }
         extension = path.indexOf('.') < 0 ? '•' : path.split('.').pop();
-        dirName = (function() {
+        dirName = ((function() {
           _ref = path.split('/');
           _result = [];
           for (_i = 0, _len2 = _ref.length; _i < _len2; _i++) {
@@ -298,7 +298,7 @@
             }
           }
           return _result;
-        })();
+        })());
         baseName = dirName.pop();
         html += "<li" + (i === 0 ? ' class=" selected"' : '') + " data-uri=\"" + (escape("" + this.path + "/" + file.file)) + "\">\n  <div class=\"extension\"><strong><img src=\"moz-icon://." + (encodeURIComponent(extension || 'txt')) + "?size=16\" />" + (escape(normalize(extension))) + "</strong></div>\n  <div class=\"file\">\n    <div class=\"name\"><span class=\"icon\" />" + (escape(normalize(baseName))) + "</div>\n    <div class=\"path\"><span class=\"directory\">" + (((function() {
           _ref = normalize((function() {

@@ -1,7 +1,9 @@
 (function() {
   var FuzzyOpen, Process, chunkify, infoService, naturalCompare, observerService, prefService, runService, sysUtils;
   var __indexOf = Array.prototype.indexOf || function(item) {
-    for (var i = 0, l = this.length; i < l; i++) if (this[i] === item) return i;
+    for (var i = 0, l = this.length; i < l; i++) {
+      if (this[i] === item) return i;
+    }
     return -1;
   }, __slice = Array.prototype.slice, __bind = function(func, context) {
     return function() { return func.apply(context, arguments); };
@@ -70,7 +72,7 @@
         this.cleanUp();
       } catch (_e) {}
       return this;
-    };
+    }
     return Process;
   })();
   Process.prototype.observe = function(child, topic, command) {
@@ -122,15 +124,15 @@
         this.events = {};
         this.process = null;
         this.worker = null;
-        this.pool = (function() {
+        this.pool = ((function() {
           _result = [];
           for (worker = 0, _to = FuzzyOpen.poolSize - 1; worker <= _to; worker++) {
             _result.push(null);
           }
           return _result;
-        })();
+        })());
         return this;
-      };
+      }
       return FuzzyOpen;
     })();
     FuzzyOpen.cache = {};
@@ -201,7 +203,7 @@
         if (exitCode !== 0) {
           return resume(Error(output.substring(0, 4096)));
         }
-        files = (function() {
+        files = ((function() {
           _ref = output.trimRight().split(/\r\n|\r|\n/);
           _result = [];
           for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -209,46 +211,30 @@
             _result.push(file.substring(path.length + 1).replace(/\\/g, '/'));
           }
           return _result;
-        })();
+        })());
         return resume(null, files);
       });
     };
-	
-    FuzzyOpen.prototype.isImplemented = function(magicFile) {
-	  
-	  var aFile = Components.classes["@mozilla.org/file/local;1"]
-				  .createInstance(Components.interfaces.nsILocalFile);
-	  aFile.initWithPath(magicFile);
-	  
-	  if(!aFile.exists())
-		return false;
-	  else
-		return true;
-	}
     FuzzyOpen.prototype.scanUnix = function(path, resume) {
-
-	  if(!this.isImplemented('/etc/fedora-release'))
-		throw Error('FuzzyOpen.scanX(..) is not implemented.');
-	  
-	  if (this.process) {
-		this.process.kill();
-	  }
-	  //skip hidden files
-	  return (this.process = Process(["find", path], function(output, exitCode) {
-		var _i, _len, _ref, _result, file, files;
-		if (exitCode !== 0) {
-		  return resume(Error(output.substring(0, 4096)));
-		}
-		files = (function() {
-		  _result = [];
-		  for (_i = 0, _len = (_ref = output.trimRight().split(/\r\n|\r|\n/)).length; _i < _len; _i++) {
-			file = _ref[_i];
-			_result.push(file.substring(path.length + 1).replace(/\\/g, '/'));
-		  }
-		  return _result;
-		})();
-		return resume(null, files);
-	  }));
+      if (this.process) {
+        this.process.kill();
+      }
+      return this.process = Process(['find', path, '-type', 'f'], function(output, exitCode) {
+        var _i, _len, _ref, _result, file, files;
+        if (exitCode !== 0) {
+          return resume(Error(output.substring(0, 4096)));
+        }
+        files = ((function() {
+          _ref = output.trimRight().split(/\r\n|\r|\n/);
+          _result = [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            file = _ref[_i];
+            _result.push(file.substring(path.length + 1));
+          }
+          return _result;
+        })());
+        return resume(null, files);
+      });
     };
     FuzzyOpen.prototype.find = function(query, uri, resume) {
       var done, normalized, path;
@@ -353,13 +339,13 @@
       if (this.process) {
         this.process.kill();
       }
-      this.pool = (function() {
+      this.pool = ((function() {
         _result = [];
         for (worker = 0, _to = FuzzyOpen.poolSize - 1; worker <= _to; worker++) {
           _result.push(null);
         }
         return _result;
-      })();
+      })());
       this.worker = null;
       this.process = null;
       return this.dispatchEvent('stop');
