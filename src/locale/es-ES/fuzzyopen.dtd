@@ -1,2 +1,2 @@
-<!ENTITY command.toggleLeftPane "Interface de Usuario: Mostrar/Ocultar Panel izquierdo &amp; Establecer foco en buscar">
+<!ENTITY command.toggleLeftPane "Interface de Usuario: Mostrar/Ocultar Panel izquierdo &amp; Colocar foco en buscar">
 <!ENTITY empty "buscar archivos…">
