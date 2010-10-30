@@ -6,7 +6,7 @@
         <em:name>Fuzzy Open</em:name>
         <em:description>Quickly locate and open files using fuzzy matching.</em:description>
         <em:creator>Stan Angeloff</em:creator>
-        <em:version>0.2</em:version>
+        <em:version>0.2.5</em:version>
 		<em:type>2</em:type>
         <em:homepageURL>http://github.com/StanAngeloff/komodo-fuzzy-open</em:homepageURL>
         <em:iconURL>chrome://fuzzyopen/skin/icon.png</em:iconURL>
